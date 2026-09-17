@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">InvestCalc</string>
+
+    <string name="nav_calculadora">Calculadora</string>
+    <string name="nav_tesouro">Tesouro Direto</string>
+    <string name="nav_comparar">Comparar</string>
+    <string name="nav_ajustes">Ajustes</string>
+
+    <string name="calculadora_title">Calculadora CDI/CDB</string>
+    <string name="calculadora_subtitle">Calcule a rentabilidade das principais aplicações de renda fixa.</string>
+    <string name="calculadora_valor_inicial">Valor inicial</string>
+    <string name="calculadora_valor_formatado">Valor digitado: %1$s</string>
+
+    <string name="tesouro_title">Tesouro Direto</string>
+    <string name="tesouro_desc">Rentabilidade dos títulos públicos será calculada aqui.</string>
+
+    <string name="comparar_title">Comparar</string>
+    <string name="comparar_desc">Em breve: compare investimentos lado a lado.</string>
+
+    <string name="ajustes_title">Ajustes</string>
+    <string name="ajustes_desc">Em breve: preferências de idioma, tema e notificações.</string>
+</resources>

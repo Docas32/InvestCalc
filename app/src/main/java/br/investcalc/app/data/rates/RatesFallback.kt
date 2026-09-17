@@ -1,0 +1,21 @@
+package br.investcalc.app.data.rates
+
+import java.time.LocalDate
+
+/**
+ * Fallback determinístico da camada de taxas — valores canônicos de exemplo,
+ * usados quando não há rede, cache ou ajuste remoto. Nunca lança.
+ */
+object RatesFallback {
+
+    const val TAXA_CDI_ANUAL_PERCENTUAL = 12.6825
+    const val TAXA_SELIC_ANUAL_PERCENTUAL = 11.25
+    const val IPCA_12_MESES_PERCENTUAL = 4.50
+
+    fun snapshot(): RatesSnapshot = RatesSnapshot(
+        taxaCdiAnualPercentual = TAXA_CDI_ANUAL_PERCENTUAL,
+        taxaSelicAnualPercentual = TAXA_SELIC_ANUAL_PERCENTUAL,
+        variacaoIpca12MesesPercentual = IPCA_12_MESES_PERCENTUAL,
+        atualizadaEm = null,
+    )
+}

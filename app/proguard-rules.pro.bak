@@ -1,0 +1,5 @@
+-keepattributes Signature
+-keepattributes *Annotation*
+
+-keep class br.investcalc.app.data.api.** { *; }
+-keep class br.investcalc.app.domain.model.** { *; }

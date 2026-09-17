@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">InvestCalc</string>
+
+    <string name="nav_calculadora">Calculator</string>
+    <string name="nav_tesouro">Treasury Direct</string>
+    <string name="nav_comparar">Compare</string>
+    <string name="nav_ajustes">Settings</string>
+
+    <string name="calculadora_title">CDI/CDB Calculator</string>
+    <string name="calculadora_subtitle">Calculate returns for the main fixed-income investments.</string>
+    <string name="calculadora_valor_inicial">Initial amount</string>
+    <string name="calculadora_valor_formatado">Typed value: %1$s</string>
+
+    <string name="tesouro_title">Treasury Direct</string>
+    <string name="tesouro_desc">Treasury bond returns will be calculated here.</string>
+
+    <string name="comparar_title">Compare</string>
+    <string name="comparar_desc">Coming soon: compare investments side by side.</string>
+
+    <string name="ajustes_title">Settings</string>
+    <string name="ajustes_desc">Coming soon: language, theme and notification preferences.</string>
+</resources>
