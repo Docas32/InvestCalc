@@ -1,12 +1,16 @@
 package br.investcalc.app.ui.chart
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -14,9 +18,12 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import br.investcalc.app.R
 import br.investcalc.app.domain.chart.EvolutionChartSeries
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -24,14 +31,10 @@ import java.util.Locale
 private val formatoMes: DateTimeFormatter =
     DateTimeFormatter.ofPattern("MM/yyyy", Locale.ROOT)
 
-private fun formatarValor(v: Double): String =
-    String.format(Locale.ROOT, "%,.2f", v)
-
 /**
- * Compose screen for the patrimony evolution chart (compound vs simple
- * baseline). Hermetic UI slice: receives an already-built
- * [EvolutionChartSeries] and renders the summary card plus the month
- * list. ASCII only, no accents, never throws.
+ * Tela de resultado do InvestCalc: gráfico de evolução (2 linhas no mesmo
+ * eixo + área de juros + tooltip) acima do card "Patrimônio mensal", seguido
+ * da tabela mês a mês. Hermética (JVM pura + recursos i18n), nunca lança.
  */
 @Composable
 fun EvolutionChartScreen(
@@ -41,7 +44,7 @@ fun EvolutionChartScreen(
 ) {
     val s = series ?: run {
         Text(
-            text = "Simule primeiro para ver a evolucao do patrimonio.",
+            text = stringResource(R.string.chart_vazio),
             style = MaterialTheme.typography.bodyMedium,
             modifier = Modifier.padding(16.dp),
         )
@@ -53,49 +56,82 @@ fun EvolutionChartScreen(
             .fillMaxWidth()
             .padding(16.dp),
     ) {
+        Text(
+            text = stringResource(R.string.chart_titulo),
+            style = MaterialTheme.typography.titleMedium,
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+
+        EvolutionChartCanvas(
+            series = s,
+            onTooltipUsed = onTooltipUsed,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(220.dp),
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // Legenda das duas séries do mesmo eixo.
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            ItemLegenda(
+                cor = MaterialTheme.colorScheme.onSurfaceVariant,
+                rotulo = stringResource(R.string.chart_total_investido),
+            )
+            ItemLegenda(
+                cor = MaterialTheme.colorScheme.primary,
+                rotulo = stringResource(R.string.chart_saldo_composto),
+            )
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+
         Card(modifier = Modifier.fillMaxWidth()) {
             Column(modifier = Modifier.padding(12.dp)) {
                 Text(
-                    text = "Patrimonio mensal (bruto, IR no saldo final)",
+                    text = stringResource(R.string.chart_patrimonio_mensal),
                     style = MaterialTheme.typography.titleMedium,
                 )
                 Row(modifier = Modifier.padding(top = 4.dp)) {
                     Text(
-                        text = "Total investido: ",
+                        text = stringResource(R.string.chart_total_investido) + ": ",
                         style = MaterialTheme.typography.bodyMedium,
                     )
                     Text(
-                        text = "R$ " + formatarValor(s.totalInvestidoFinal),
-                        style = MaterialTheme.typography.bodyMedium,
-                    )
-                }
-                Row(modifier = Modifier.padding(top = 2.dp)) {
-                    Text(
-                        text = "Saldo composto: ",
-                        style = MaterialTheme.typography.bodyMedium,
-                    )
-                    Text(
-                        text = "R$ " + formatarValor(s.saldoCompostoFinal),
+                        text = formatarMoeda(s.totalInvestidoFinal),
                         style = MaterialTheme.typography.bodyMedium,
                     )
                 }
                 Row(modifier = Modifier.padding(top = 2.dp)) {
                     Text(
-                        text = "Juros acumulados: ",
+                        text = stringResource(R.string.chart_saldo_composto_label) + ": ",
                         style = MaterialTheme.typography.bodyMedium,
                     )
                     Text(
-                        text = "R$ " + formatarValor(s.jurosAcumuladosFinal),
+                        text = formatarMoeda(s.saldoCompostoFinal),
                         style = MaterialTheme.typography.bodyMedium,
                     )
                 }
                 Row(modifier = Modifier.padding(top = 2.dp)) {
                     Text(
-                        text = "Bonus juros sobre juros: ",
+                        text = stringResource(R.string.chart_juros_acumulados_label) + ": ",
                         style = MaterialTheme.typography.bodyMedium,
                     )
                     Text(
-                        text = "R$ " + formatarValor(s.bonusJurosSobreJurosFinal),
+                        text = formatarMoeda(s.jurosAcumuladosFinal),
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                }
+                Row(modifier = Modifier.padding(top = 2.dp)) {
+                    Text(
+                        text = stringResource(R.string.chart_bonus_juros_label) + ": ",
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                    Text(
+                        text = formatarMoeda(s.bonusJurosSobreJurosFinal),
                         style = MaterialTheme.typography.bodyMedium,
                     )
                 }
@@ -105,7 +141,7 @@ fun EvolutionChartScreen(
         Spacer(modifier = Modifier.height(12.dp))
 
         Text(
-            text = "Mes a mes (toque para abrir a tabela)",
+            text = stringResource(R.string.chart_mes_a_mes),
             style = MaterialTheme.typography.titleSmall,
         )
         Spacer(modifier = Modifier.height(6.dp))
@@ -131,19 +167,19 @@ fun EvolutionChartScreen(
                         modifier = Modifier.width(72.dp),
                     )
                     Text(
-                        text = "R$ " + formatarValor(p.saldoCompostoFimDoMes),
+                        text = formatarMoeda(p.saldoCompostoFimDoMes),
                         style = MaterialTheme.typography.bodySmall,
-                        modifier = Modifier.width(108.dp),
+                        modifier = Modifier.width(118.dp),
                     )
                     Text(
-                        text = "R$ " + formatarValor(p.jurosAcumuladosFimDoMes),
+                        text = formatarMoeda(p.jurosAcumuladosFimDoMes),
                         style = MaterialTheme.typography.bodySmall,
-                        modifier = Modifier.width(108.dp),
+                        modifier = Modifier.width(118.dp),
                     )
                     Text(
-                        text = "R$ " + formatarValor(p.diferencaJurosSobreJurosFimDoMes),
+                        text = formatarMoeda(p.diferencaJurosSobreJurosFimDoMes),
                         style = MaterialTheme.typography.bodySmall,
-                        modifier = Modifier.width(108.dp),
+                        modifier = Modifier.width(118.dp),
                     )
                 }
             }
@@ -152,10 +188,31 @@ fun EvolutionChartScreen(
         Spacer(modifier = Modifier.height(8.dp))
 
         Text(
-            text = "Bonus advertido: "
-                + "R$ " + formatarValor(s.bonusJurosSobreJurosFinal)
-                + " vieram dos juros sobre juros.",
+            text = stringResource(
+                R.string.chart_bonus_advertido,
+                formatarMoeda(s.bonusJurosSobreJurosFinal),
+            ),
             style = MaterialTheme.typography.bodySmall,
+        )
+    }
+}
+
+@Composable
+private fun ItemLegenda(
+    cor: androidx.compose.ui.graphics.Color,
+    rotulo: String,
+) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Box(
+            modifier = Modifier
+                .size(width = 20.dp, height = 4.dp)
+                .background(cor),
+        )
+        Spacer(modifier = Modifier.width(6.dp))
+        Text(
+            text = rotulo,
+            style = MaterialTheme.typography.bodySmall,
+            textAlign = TextAlign.End,
         )
     }
 }

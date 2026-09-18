@@ -20,7 +20,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import br.investcalc.app.R
 import br.investcalc.app.domain.calculator.CdbCalculator
 import br.investcalc.app.domain.chart.PatrimonioSeries
 import br.investcalc.app.domain.chart.PatrimonioSeriesBuilder
@@ -35,8 +37,8 @@ private const val PERCENTUAL_CDI_MIN = 0.0
 private const val PERCENTUAL_CDI_MAX = 1000.0
 
 /**
- * Fatia S3 - formulario de simulacao CDI/CDB (hermetico, ASCII puro,
- * sem rede nesta tela; a taxa do BCB chega pronta por parametro).
+ * Fatia S3 - formulario de simulacao CDI/CDB (hermetico, sem rede nesta
+ * tela; a taxa do BCB chega pronta por parametro).
  *
  * Campos:
  *  - "Percentual do CDI (%)": texto livre (default 100) aceitando decimais
@@ -44,12 +46,12 @@ private const val PERCENTUAL_CDI_MAX = 1000.0
  *  - "Taxa DI (% a.a.)": preenchida automaticamente pela camada de taxas
  *    (BCB · dd/mm ou "fallback"), editavel pelo usuario;
  *  - taxa mensal efetiva = (1 + (DI/100 * pct/100))^(1/12) - 1, recalculada
- *    AO VIVO a cada digitação (percentual ou DI), sem tocar em Simular;
+ *    AO VIVO a cada digitacao (percentual ou DI), sem tocar em Simular;
  *  - "Taxa de juros (% ao mes)" (heranca) fica em **modo avancado**
  *    recolhido; quando preenchido e > 0, sobrescreve a taxa derivada do CDI.
  *
  * O percentual usado no calculo e sempre o lido do campo no momento do toque
- * em Simular (fonte unica de verdade — ver análise da causa raiz P1.1).
+ * em Simular (fonte unica de verdade — ver analise da causa raiz P1.1).
  *
  * Fluxo de resultado: devolve [InvestmentResult] (bruto/investido/
  * rendimento/IR/liquido) alem da [PatrimonioSeries] para o grafico.
@@ -71,6 +73,21 @@ fun SimulacaoScreen(
     var taxaMensalManualTexto by remember { mutableStateOf("") }
     var modoAvancado by remember { mutableStateOf(false) }
     var aviso by remember { mutableStateOf<String?>(null) }
+
+    val rotuloValorInicial = stringResource(R.string.campo_valor_inicial)
+    val rotuloAporteMensal = stringResource(R.string.campo_aporte_mensal)
+    val rotuloMeses = stringResource(R.string.campo_meses)
+    val rotuloPercentualCdi = stringResource(R.string.campo_percentual_cdi)
+    val rotuloTaxaDi = stringResource(R.string.campo_taxa_di)
+    val rotuloTaxaMensalManual = stringResource(R.string.campo_taxa_juros_mensal)
+    val msgErroPctCdi = stringResource(R.string.erro_percentual_cdi_simular)
+    val msgErroTaxaMensalManual = stringResource(R.string.erro_taxa_mensal_manual)
+    val msgErroTaxaDi = stringResource(R.string.erro_taxa_di)
+    val msgErroValorAporte = stringResource(R.string.erro_valor_aporte)
+    val rotuloOcultarAvancado = stringResource(R.string.ocultar_modo_avancado)
+    val rotuloModoAvancado = stringResource(R.string.modo_avancado)
+    val rotuloSimular = stringResource(R.string.simular)
+    val rotuloVoltar = stringResource(R.string.voltar)
 
     // P3: a taxa do BCB chega de forma assíncrona; quando ela muda, atualiza o
     // campo — a menos que o usuário já o tenha editado à mão.
@@ -100,12 +117,13 @@ fun SimulacaoScreen(
         taxaMensalDerivada
     }
     val linhaTaxaMensal = if (percentualValido || (modoAvancado && taxaMensalManual > 0.0)) {
-        "Taxa mensal efetiva: " + taxaMensalUsada.formatarTaxa() +
-            "% a.m. (equiv. " +
-            (taxaMensalUsada / 100.0).mensalParaAnualPercentual().formatarTaxa() +
-            "% a.a.)"
+        stringResource(
+            R.string.taxa_mensal_efetiva,
+            taxaMensalUsada.formatarTaxa(),
+            (taxaMensalUsada / 100.0).mensalParaAnualPercentual().formatarTaxa(),
+        )
     } else {
-        "Taxa mensal efetiva: -- (informe o percentual do CDI)"
+        stringResource(R.string.taxa_mensal_efetiva_vazia)
     }
 
     Column(
@@ -115,7 +133,7 @@ fun SimulacaoScreen(
             .padding(16.dp),
     ) {
         Text(
-            text = "Calculadora CDI/CDB",
+            text = stringResource(R.string.calculadora_title),
             style = MaterialTheme.typography.titleLarge,
         )
         Spacer(Modifier.height(12.dp))
@@ -123,7 +141,7 @@ fun SimulacaoScreen(
         OutlinedTextField(
             value = valorInicialTexto,
             onValueChange = { valorInicialTexto = it },
-            label = { Text("Valor inicial (R$)") },
+            label = { Text(rotuloValorInicial) },
             singleLine = true,
             modifier = Modifier.fillMaxWidth(),
         )
@@ -132,7 +150,7 @@ fun SimulacaoScreen(
         OutlinedTextField(
             value = aporteMensalTexto,
             onValueChange = { aporteMensalTexto = it },
-            label = { Text("Aporte mensal (R$)") },
+            label = { Text(rotuloAporteMensal) },
             singleLine = true,
             modifier = Modifier.fillMaxWidth(),
         )
@@ -141,7 +159,7 @@ fun SimulacaoScreen(
         OutlinedTextField(
             value = mesesTexto,
             onValueChange = { mesesTexto = it },
-            label = { Text("Meses (1..9999)") },
+            label = { Text(rotuloMeses) },
             singleLine = true,
             modifier = Modifier.fillMaxWidth(),
         )
@@ -153,11 +171,11 @@ fun SimulacaoScreen(
                 percentualCdiTexto = it
                 aviso = null
             },
-            label = { Text("Percentual do CDI (%)") },
+            label = { Text(rotuloPercentualCdi) },
             singleLine = true,
             isError = !percentualValido,
             supportingText = if (!percentualValido) {
-                { Text("Informe um numero maior que 0 e no maximo 1000.") }
+                { Text(stringResource(R.string.erro_percentual_cdi)) }
             } else {
                 null
             },
@@ -171,7 +189,7 @@ fun SimulacaoScreen(
                 taxaDiTexto = it
                 taxaDiEditadaManualmente = true
             },
-            label = { Text("Taxa DI (% a.a.)") },
+            label = { Text(rotuloTaxaDi) },
             singleLine = true,
             modifier = Modifier.fillMaxWidth(),
         )
@@ -189,13 +207,13 @@ fun SimulacaoScreen(
         Spacer(Modifier.height(8.dp))
 
         TextButton(onClick = { modoAvancado = !modoAvancado }) {
-            Text(if (modoAvancado) "Ocultar modo avancado" else "Modo avancado (taxa mensal direta)")
+            Text(if (modoAvancado) rotuloOcultarAvancado else rotuloModoAvancado)
         }
         if (modoAvancado) {
             OutlinedTextField(
                 value = taxaMensalManualTexto,
                 onValueChange = { taxaMensalManualTexto = it },
-                label = { Text("Taxa de juros (% ao mes)") },
+                label = { Text(rotuloTaxaMensalManual) },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
             )
@@ -210,13 +228,13 @@ fun SimulacaoScreen(
                     val usarManual = modoAvancado && taxaMensalManual > 0.0
                     when {
                         !percentualValido ->
-                            aviso = "Percentual do CDI deve ser maior que 0 e no maximo 1000."
+                            aviso = msgErroPctCdi
                         modoAvancado && taxaMensalManual <= 0.0 ->
-                            aviso = "Informe a taxa mensal manual > 0 ou use a taxa do CDI."
+                            aviso = msgErroTaxaMensalManual
                         taxaMensalUsada <= 0.0 ->
-                            aviso = "Informe a Taxa DI (% a.a.) > 0."
+                            aviso = msgErroTaxaDi
                         valorInicial <= 0.0 && aporteMensal <= 0.0 ->
-                            aviso = "Informe valor inicial ou aporte mensal > 0."
+                            aviso = msgErroValorAporte
                         else -> {
                             aviso = null
                             val serie = PatrimonioSeriesBuilder.construir(
@@ -249,11 +267,11 @@ fun SimulacaoScreen(
                 },
                 modifier = Modifier.weight(1f),
             ) {
-                Text("Simular")
+                Text(rotuloSimular)
             }
             Spacer(Modifier.height(0.dp).weight(0.2f))
             TextButton(onClick = onVoltar) {
-                Text("Voltar")
+                Text(rotuloVoltar)
             }
         }
 

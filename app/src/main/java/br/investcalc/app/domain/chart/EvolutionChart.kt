@@ -108,4 +108,51 @@ object EvolutionChartBuilder {
         }
         return EvolutionChartSeries(pontos = pontos)
     }
+
+    /**
+     * Converte a série mensal já existente ([PatrimonioSeries]) na série de
+     * evolução do gráfico — exatamente o pipeline usado pela tela de
+     * resultado:
+     *
+     * ```
+     * totalInvestido(m) = valorInicial + soma dos aportes até m   (reta)
+     * saldoComposto(m) = patrimonioLiquidoFimDoMes                (curva)
+     * jurosAcumulados(m) = saldo(m) - totalInvestido(m)
+     * ```
+     *
+     * A contrafactual de juros simples reaproveita a mesma taxa efetiva da
+     * simulação. Hermético (JVM pura), nunca lança; série vazia → série vazia.
+     */
+    fun dePatrimonio(serie: PatrimonioSeries): EvolutionChartSeries {
+        val pontos = serie.pontos
+        if (pontos.isEmpty()) return EvolutionChartSeries(pontos = emptyList())
+
+        val meses = ArrayList<LocalDate>(pontos.size)
+        val totais = ArrayList<Double>(pontos.size)
+        val saldos = ArrayList<Double>(pontos.size)
+        val aportes = ArrayList<Double>(pontos.size)
+        var acumuladoInvestido = serie.valorInicial
+        pontos.forEach { p ->
+            acumuladoInvestido += p.aporteNoMes
+            meses.add(p.inicioDoMes)
+            totais.add(acumuladoInvestido)
+            saldos.add(p.patrimonioLiquidoFimDoMes)
+            aportes.add(p.aporteNoMes)
+        }
+
+        val baseline = JurosSimplesBaselineBuilder.construir(
+            valorInicial = serie.valorInicial,
+            aporteMensal = serie.aporteMensal,
+            meses = pontos.size,
+            taxaPercentualMensal = serie.taxaMensalPercentual,
+        ).pontos.map { it.jurosSimplesAcumuladoFimDoMes }
+
+        return construir(
+            meses = meses,
+            totalInvestidoFimDoMes = totais,
+            saldoCompostoFimDoMes = saldos,
+            jurosSimplesBaselineFimDoMes = baseline,
+            aportesPorMes = aportes,
+        )
+    }
 }

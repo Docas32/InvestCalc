@@ -12,12 +12,56 @@
     <string name="calculadora_valor_inicial">Valor inicial</string>
     <string name="calculadora_valor_formatado">Valor digitado: %1$s</string>
 
-    <string name="tesouro_title">Tesouro Direto</string>
-    <string name="tesouro_desc">Rentabilidade dos títulos públicos será calculada aqui.</string>
+    <string name="campo_valor_inicial">Valor inicial (R$)</string>
+    <string name="campo_aporte_mensal">Aporte mensal (R$)</string>
+    <string name="campo_meses">Meses (1..9999)</string>
+    <string name="campo_percentual_cdi" formatted="false">Percentual do CDI (%)</string>
+    <string name="campo_taxa_di" formatted="false">Taxa DI (% a.a.)</string>
+    <string name="campo_taxa_juros_mensal" formatted="false">Taxa de juros (% ao mês)</string>
+    <string name="erro_percentual_cdi">Informe um número maior que 0 e no máximo 1000.</string>
+    <string name="erro_percentual_cdi_simular">Percentual do CDI deve ser maior que 0 e no máximo 1000.</string>
+    <string name="erro_taxa_mensal_manual">Informe a taxa mensal manual > 0 ou use a taxa do CDI.</string>
+    <string name="erro_taxa_di" formatted="false">Informe a Taxa DI (% a.a.) > 0.</string>
+    <string name="erro_valor_aporte">Informe valor inicial ou aporte mensal > 0.</string>
+    <string name="taxa_mensal_efetiva">Taxa mensal efetiva: %1$s%% a.m. (equiv. %2$s%% a.a.)</string>
+    <string name="taxa_mensal_efetiva_vazia">Taxa mensal efetiva: -- (informe o percentual do CDI)</string>
+    <string name="ocultar_modo_avancado">Ocultar modo avançado</string>
+    <string name="modo_avancado">Modo avançado (taxa mensal direta)</string>
+    <string name="simular">Simular</string>
+    <string name="voltar">Voltar</string>
 
-    <string name="comparar_title">Comparar</string>
-    <string name="comparar_desc">Em breve: compare investimentos lado a lado.</string>
+    <string name="resultado_title">Resultado (com IR)</string>
+    <string name="resultado_valor_bruto">Valor bruto</string>
+    <string name="resultado_total_investido">Total investido</string>
+    <string name="resultado_rendimento_bruto">Rendimento bruto</string>
+    <string name="resultado_ir">IR (%1$s)</string>
+    <string name="resultado_valor_liquido">Valor líquido</string>
+
+    <string name="chart_vazio">Simule primeiro para ver a evolução do patrimônio.</string>
+    <string name="chart_titulo">Evolução do patrimônio</string>
+    <string name="chart_patrimonio_mensal">Patrimônio mensal (bruto, IR no saldo final)</string>
+    <string name="chart_total_investido">Total investido</string>
+    <string name="chart_saldo_composto">Patrimônio (juros compostos)</string>
+    <string name="chart_saldo_composto_label">Saldo composto</string>
+    <string name="chart_juros_acumulados_label">Juros acumulados</string>
+    <string name="chart_bonus_juros_label">Bônus juros sobre juros</string>
+    <string name="chart_mes_a_mes">Mês a mês (toque para abrir a tabela)</string>
+    <string name="chart_bonus_advertido">Bônus advertido: R$ %1$s vieram dos juros sobre juros.</string>
+    <string name="chart_tooltip_saldo">Saldo: %1$s</string>
+    <string name="chart_tooltip_rendimento">Rendimento do mês: %1$s</string>
+    <string name="chart_tooltip_juros">Juros acumulados: %1$s</string>
 
     <string name="ajustes_title">Ajustes</string>
-    <string name="ajustes_desc">Em breve: preferências de idioma, tema e notificações.</string>
+    <string name="ajustes_desc">Em breve: preferências de idioma e tema.</string>
+    <string name="anuncios_consentimento">Anúncios (consentimento)</string>
+    <string name="anuncios_ativo">Ativo</string>
+    <string name="anuncios_inativo">Inativo, sem ads</string>
+
+    <string name="origem_taxa_fallback">fallback</string>
+    <string name="origem_taxa_bcb">BCB · %1$s</string>
+
+    <string name="tesouro_title">Tesouro Direto</string>
+    <string name="tesouro_desc">Rentabilidade dos títulos públicos será calculada aqui.</string>
+    <string name="comparar_title">Comparar</string>
+    <string name="comparar_desc">Em breve: compare investimentos lado a lado.</string>
 </resources>

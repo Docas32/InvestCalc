@@ -10,7 +10,6 @@ import androidx.compose.material.icons.automirrored.filled.CompareArrows
 import androidx.compose.material.icons.filled.AccountBalance
 import androidx.compose.material.icons.filled.Calculate
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -41,7 +40,6 @@ import br.investcalc.app.data.rates.BcbRatesRepository
 import br.investcalc.app.data.rates.DataStoreTaxaCache
 import br.investcalc.app.data.rates.RatesSnapshot
 import br.investcalc.app.domain.chart.EvolutionChartBuilder
-import br.investcalc.app.domain.chart.JurosSimplesBaselineBuilder
 import br.investcalc.app.domain.chart.PatrimonioSeries
 import br.investcalc.app.domain.model.InvestmentResult
 import br.investcalc.app.ui.chart.EvolutionChartScreen
@@ -57,12 +55,13 @@ private const val ROTA_COMPARAR = "comparar"
 private const val ROTA_AJUSTES = "ajustes"
 
 /**
- * Navegacao principal do InvestCalc (ASCII puro, M3, sem rede, sem Firebase).
+ * Navegacao principal do InvestCalc (Material 3, sem rede, sem Firebase).
  *
  * Bottom nav com 4 abas (Calculadora, Tesouro Direto, Comparar, Ajustes).
  * A aba Calculadora mantem o fluxo local SimulacaoScreen -> EvolutionChartScreen
- * (estado em memoria, nunca persistido); a serie trazida pela simulacao e
- * convertida para a linha de juros compostos com baseline de juros simples.
+ * (estado em memoria, nunca persistido); a serie mensal da simulacao
+ * ([PatrimonioSeries]) e convertida para o grafico via
+ * [EvolutionChartBuilder.dePatrimonio].
  */
 @Composable
 fun AppNavHost(modifier: Modifier = Modifier) {
@@ -122,9 +121,7 @@ fun AppNavHost(modifier: Modifier = Modifier) {
             composable(ROTA_AJUSTES) {
                 AjustesScreen(
                     consentimentoAdsAtivo = false,
-                    notificacoesAtivas = false,
                     onAlternativeConsentimento = {},
-                    onAlternarNotificacoes = {},
                 )
             }
         }
@@ -162,34 +159,10 @@ private fun AbaCalculadora() {
         .takeIf { it > 0.0 }
         ?: TAXA_DI_ANUAL_FALLBACK_PERCENTUAL
 
+    // Gráfico derivado da série mensal já existente (mesma taxa efetiva da
+    // simulação) — pipeline único compartilhado com os testes de consistência.
     val chart = remember(serie) {
-        serie?.let { s ->
-            val pontos = s.pontos
-            val saldos = pontos.map { it.patrimonioLiquidoFimDoMes }
-            val jurosAcumulados = ArrayList<Double>(pontos.size)
-            var jurosCorridos = 0.0
-            pontos.forEach { p ->
-                jurosCorridos += p.rendimentoNoMes
-                jurosAcumulados.add(jurosCorridos)
-            }
-            val totais = saldos.indices.map { m -> saldos[m] - jurosAcumulados[m] }
-            val n = pontos.size.coerceAtLeast(1)
-            // Baseline de juros simples com a taxa efetiva real usada na
-            // simulacao: P*i*m + A*i*m*(m-1)/2 (ver JurosSimplesBaselineBuilder).
-            val baseline = JurosSimplesBaselineBuilder.construir(
-                valorInicial = s.valorInicial,
-                aporteMensal = s.aporteMensal,
-                meses = n,
-                taxaPercentualMensal = s.taxaMensalPercentual,
-            ).pontos.map { it.jurosSimplesAcumuladoFimDoMes }
-            EvolutionChartBuilder.construir(
-                meses = pontos.map { it.inicioDoMes },
-                totalInvestidoFimDoMes = totais,
-                saldoCompostoFimDoMes = saldos,
-                jurosSimplesBaselineFimDoMes = baseline,
-                aportesPorMes = pontos.map { it.aporteNoMes },
-            )
-        }
+        serie?.let { EvolutionChartBuilder.dePatrimonio(it) }
     }
 
     if (serie == null) {
@@ -202,7 +175,9 @@ private fun AbaCalculadora() {
         )
     } else {
         Column(modifier = Modifier.fillMaxSize()) {
-            TextButton(onClick = { serie = null; resultado = null }) { Text("Voltar") }
+            TextButton(onClick = { serie = null; resultado = null }) {
+                Text(stringResource(R.string.voltar))
+            }
             resultado?.let { ir ->
                 ResumoResultado(ir)
             }
@@ -216,26 +191,45 @@ private fun AbaCalculadora() {
 }
 
 /** "BCB · dd/mm" quando há data de atualização; senão "fallback". */
+@Composable
 private fun rotuloOrigemTaxa(snapshot: RatesSnapshot): String {
-    val data = snapshot.atualizadaEm ?: return "fallback"
-    return "BCB · " + data.format(DateTimeFormatter.ofPattern("dd/MM", Locale.ROOT))
+    val data = snapshot.atualizadaEm ?: return stringResource(R.string.origem_taxa_fallback)
+    return stringResource(
+        R.string.origem_taxa_bcb,
+        data.format(DateTimeFormatter.ofPattern("dd/MM", Locale.ROOT)),
+    )
 }
 
 @Composable
 private fun ResumoResultado(resultado: InvestmentResult) {
     Column(modifier = Modifier.padding(16.dp)) {
         Text(
-            text = "Resultado (com IR)",
+            text = stringResource(R.string.resultado_title),
             style = MaterialTheme.typography.titleMedium,
         )
         HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-        LinhaResumo("Valor bruto", resultado.valorBruto.cents)
-        LinhaResumo("Total investido", resultado.valorInvestido.cents)
-        LinhaResumo("Rendimento bruto", resultado.rendimentoBruto.cents)
-        LinhaResumo("IR (" + "%.1f".format(Locale.ROOT, resultado.aliquotaIr * 100.0) + "%)", resultado.irPago.cents)
         LinhaResumo(
-            "Valor liquido",
-            resultado.valorLiquido.cents,
+            rotulo = stringResource(R.string.resultado_valor_bruto),
+            centavos = resultado.valorBruto.cents,
+        )
+        LinhaResumo(
+            rotulo = stringResource(R.string.resultado_total_investido),
+            centavos = resultado.valorInvestido.cents,
+        )
+        LinhaResumo(
+            rotulo = stringResource(R.string.resultado_rendimento_bruto),
+            centavos = resultado.rendimentoBruto.cents,
+        )
+        LinhaResumo(
+            rotulo = stringResource(
+                R.string.resultado_ir,
+                "%.1f".format(Locale.ROOT, resultado.aliquotaIr * 100.0) + "%",
+            ),
+            centavos = resultado.irPago.cents,
+        )
+        LinhaResumo(
+            rotulo = stringResource(R.string.resultado_valor_liquido),
+            centavos = resultado.valorLiquido.cents,
             destaque = true,
         )
     }

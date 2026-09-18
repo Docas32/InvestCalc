@@ -8,16 +8,60 @@
     <string name="nav_ajustes">Settings</string>
 
     <string name="calculadora_title">CDI/CDB Calculator</string>
-    <string name="calculadora_subtitle">Calculate returns for the main fixed-income investments.</string>
+    <string name="calculadora_subtitle">Calculate the returns of the main fixed-income investments.</string>
     <string name="calculadora_valor_inicial">Initial amount</string>
     <string name="calculadora_valor_formatado">Typed value: %1$s</string>
 
-    <string name="tesouro_title">Treasury Direct</string>
-    <string name="tesouro_desc">Treasury bond returns will be calculated here.</string>
+    <string name="campo_valor_inicial">Initial amount (R$)</string>
+    <string name="campo_aporte_mensal">Monthly contribution (R$)</string>
+    <string name="campo_meses">Months (1..9999)</string>
+    <string name="campo_percentual_cdi" formatted="false">CDI percentage (%)</string>
+    <string name="campo_taxa_di" formatted="false">DI rate (% p.a.)</string>
+    <string name="campo_taxa_juros_mensal" formatted="false">Interest rate (% per month)</string>
+    <string name="erro_percentual_cdi">Enter a number greater than 0 and at most 1000.</string>
+    <string name="erro_percentual_cdi_simular">The CDI percentage must be greater than 0 and at most 1000.</string>
+    <string name="erro_taxa_mensal_manual">Enter a manual monthly rate > 0 or use the CDI rate.</string>
+    <string name="erro_taxa_di" formatted="false">Enter the DI rate (% p.a.) > 0.</string>
+    <string name="erro_valor_aporte">Enter an initial amount or monthly contribution > 0.</string>
+    <string name="taxa_mensal_efetiva">Effective monthly rate: %1$s%% p.m. (equiv. %2$s%% p.a.)</string>
+    <string name="taxa_mensal_efetiva_vazia">Effective monthly rate: -- (enter the CDI percentage)</string>
+    <string name="ocultar_modo_avancado">Hide advanced mode</string>
+    <string name="modo_avancado">Advanced mode (direct monthly rate)</string>
+    <string name="simular">Simulate</string>
+    <string name="voltar">Back</string>
 
-    <string name="comparar_title">Compare</string>
-    <string name="comparar_desc">Coming soon: compare investments side by side.</string>
+    <string name="resultado_title">Result (after IR)</string>
+    <string name="resultado_valor_bruto">Gross amount</string>
+    <string name="resultado_total_investido">Total invested</string>
+    <string name="resultado_rendimento_bruto">Gross earnings</string>
+    <string name="resultado_ir">IR (%1$s)</string>
+    <string name="resultado_valor_liquido">Net value</string>
+
+    <string name="chart_vazio">Run a simulation first to see the patrimony evolution.</string>
+    <string name="chart_titulo">Patrimony evolution</string>
+    <string name="chart_patrimonio_mensal">Monthly patrimony (gross, IR on final balance)</string>
+    <string name="chart_total_investido">Total invested</string>
+    <string name="chart_saldo_composto">Patrimony (compound interest)</string>
+    <string name="chart_saldo_composto_label">Compound balance</string>
+    <string name="chart_juros_acumulados_label">Accumulated interest</string>
+    <string name="chart_bonus_juros_label">Interest-on-interest bonus</string>
+    <string name="chart_mes_a_mes">Month by month (tap to open the table)</string>
+    <string name="chart_bonus_advertido">Advertised bonus: R$ %1$s came from interest on interest.</string>
+    <string name="chart_tooltip_saldo">Balance: %1$s</string>
+    <string name="chart_tooltip_rendimento">Month yield: %1$s</string>
+    <string name="chart_tooltip_juros">Accumulated interest: %1$s</string>
 
     <string name="ajustes_title">Settings</string>
-    <string name="ajustes_desc">Coming soon: language, theme and notification preferences.</string>
+    <string name="ajustes_desc">Coming soon: language and theme preferences.</string>
+    <string name="anuncios_consentimento">Ads (consent)</string>
+    <string name="anuncios_ativo">Active</string>
+    <string name="anuncios_inativo">Inactive, no ads</string>
+
+    <string name="origem_taxa_fallback">fallback</string>
+    <string name="origem_taxa_bcb">BCB · %1$s</string>
+
+    <string name="tesouro_title">Treasury Direct</string>
+    <string name="tesouro_desc">Treasury bond returns will be calculated here.</string>
+    <string name="comparar_title">Compare</string>
+    <string name="comparar_desc">Coming soon: compare investments side by side.</string>
 </resources>
