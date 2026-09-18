@@ -5,18 +5,21 @@ import kotlinx.coroutines.flow.StateFlow
 /**
  * Contrato da camada de taxas de referência usado pela UI e pelos testes
  * herméticos (JVM). As prioridades de frescor são resolvidas pela
- * implementação em `data.rates.remote` e `data.rates.cache`:
+ * implementação em [BcbRatesRepository]:
  *
- * 1. Cache no disco com TTL de 12 horas (DataStore/Preferences) — nunca
- *    bloqueia a UI no cold start;
- * 2. CDI anual via API do BCB (série 12, últimos 12 pontos → anualização);
- * 3. Remote Config (default_cdi_annual, default_selic_annual,
- *    default_ipca_annual) com fallbacks no XML;
- * 4. Valores herdados hermeticamente: { cdi = 12.6825, selic = 11.25,
+ * 1. Cache no disco com TTL de 24 horas (DataStore/Preferences) — nunca
+ *    bloqueia a UI no cold start; serve-stale em qualquer idade;
+ * 2. CDI/Selic//IPCA via API do BCB (séries 4389/1178/13522), NO MÁXIMO 1x
+ *    por processo, com 1 tentativa + retry (2s ± jitter);
+ * 3. Cache stale (valor antigo, de qualquer data);
+ * 4. Remote Config (cdi_anual_percentual_default, selic_anual_percentual_default,
+ *    ipca_12m_percentual_default);
+ * 5. XML default (res/raw/taxas_defaults.xml);
+ * 6. Valores herdados hermeticamente: { cdi = 10.90, selic = 10.90,
  *    ipca = 4.50 } a.a..
  *
  * Contrato **nunca lança** exceção: toda entrega é via [RatesSnapshot] com
- * [TaxSource] explícito (para a badge "atualizada em dd/mm").
+ * a origem efetiva registrada em Analytics ([TaxSource]).
  */
 interface RatesRepository {
 

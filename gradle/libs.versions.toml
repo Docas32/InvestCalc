@@ -52,6 +52,8 @@ firebase-config = { group = "com.google.firebase", name = "firebase-config" }
 
 play-services-ads = { group = "com.google.android.gms", name = "play-services-ads", version.ref = "playServicesAds" }
 
+mockwebserver = { group = "com.squareup.okhttp3", name = "mockwebserver", version.ref = "okhttp" }
+
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 
 [plugins]

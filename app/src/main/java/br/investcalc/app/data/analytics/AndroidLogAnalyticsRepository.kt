@@ -23,4 +23,8 @@ class AndroidLogAnalyticsRepository(private val tag: String = "InvestCalc-Analyt
                 "hasMonthlyContribution=$hasMonthlyContribution",
         )
     }
+
+    override fun taxaOrigemUsada(origem: String) {
+        Log.i(tag, "taxa_origem_usada origem=$origem")
+    }
 }

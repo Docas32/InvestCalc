@@ -52,7 +52,10 @@ class BcbRatesRepositoryTest {
 
     @Test
     fun `falha de rede degrada para o fallback 10 90`() = runBlocking {
-        val repo = BcbRatesRepository(api = FakeBcbApi(erro = true))
+        val repo = BcbRatesRepository(
+            api = FakeBcbApi(erro = true),
+            retryAtrasoMs = { 0L },
+        )
         assertEquals(
             RatesFallback.TAXA_CDI_ANUAL_PERCENTUAL,
             repo.taxaCdiAnual().taxaCdiAnualPercentual,

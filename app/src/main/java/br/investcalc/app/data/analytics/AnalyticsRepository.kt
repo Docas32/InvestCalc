@@ -20,4 +20,11 @@ interface AnalyticsRepository {
         months: Int,
         hasMonthlyContribution: Boolean,
     )
+
+    /**
+     * Registra a origem das taxas servidas pela cadeia de resiliência
+     * (T1-v2): "cache_fresca", "bcb", "cache_stale", "remote_config", "xml"
+     * ou "fallback" — ver [br.investcalc.app.data.rates.TaxSource].
+     */
+    fun taxaOrigemUsada(origem: String)
 }

@@ -31,10 +31,13 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import br.investcalc.app.R
+import br.investcalc.app.data.analytics.AndroidLogAnalyticsRepository
 import br.investcalc.app.data.rates.BcbApiFactory
 import br.investcalc.app.data.rates.BcbRatesRepository
 import br.investcalc.app.data.rates.DataStoreTaxaCache
 import br.investcalc.app.data.rates.RatesSnapshot
+import br.investcalc.app.data.rates.RawXmlDefaultsRates
+import br.investcalc.app.data.remotecfg.FirebaseRemoteConfigRates
 import br.investcalc.app.domain.chart.EvolutionChartBuilder
 import br.investcalc.app.domain.chart.PatrimonioSeries
 import br.investcalc.app.domain.model.InvestmentResult
@@ -72,6 +75,9 @@ fun AppNavHost(modifier: Modifier = Modifier) {
         BcbRatesRepository(
             api = BcbApiFactory.criar(),
             cache = DataStoreTaxaCache(contexto),
+            remoteConfig = FirebaseRemoteConfigRates(),
+            xmlDefaults = RawXmlDefaultsRates(contexto),
+            analyticsRepository = AndroidLogAnalyticsRepository(),
         )
     }
 

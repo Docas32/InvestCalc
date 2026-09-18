@@ -10,8 +10,10 @@ import kotlinx.coroutines.flow.first
 
 /**
  * Cache persistido das taxas de referência (DataStore/Preferences) com o
- * TTL de 12h resolvido pelo consumidor ([BcbRatesRepository] via
- * `atualizadaEm`, nunca por este cache).
+ * TTL de 24h resolvido pelo consumidor ([BcbRatesRepository] via
+ * `atualizadaEm`, nunca por este cache). Em falha de rede o mesmo valor é
+ * servido stale (serve-stale) — de qualquer idade — antes de cair para
+ * Remote Config e XML.
  */
 interface TaxaCache {
     suspend fun carregar(): RatesSnapshot?
@@ -39,6 +41,7 @@ class DataStoreTaxaCache(context: Context) : TaxaCache {
             taxaSelicAnualPercentual = prefs[KEY_SELIC]?.toDouble() ?: base.TAXA_SELIC_ANUAL_PERCENTUAL,
             variacaoIpca12MesesPercentual = prefs[KEY_IPCA]?.toDouble() ?: base.IPCA_12_MESES_PERCENTUAL,
             atualizadaEm = LocalDate.ofEpochDay(dia),
+            salvoEm = prefs[KEY_SALVO_EM]?.let(LocalDate::ofEpochDay),
         )
     }
 
@@ -48,6 +51,7 @@ class DataStoreTaxaCache(context: Context) : TaxaCache {
             prefs[KEY_SELIC] = snapshot.taxaSelicAnualPercentual.toFloat()
             prefs[KEY_IPCA] = snapshot.variacaoIpca12MesesPercentual.toFloat()
             prefs[KEY_DIA] = (snapshot.atualizadaEm ?: LocalDate.now()).toEpochDay()
+            prefs[KEY_SALVO_EM] = (snapshot.salvoEm ?: LocalDate.now()).toEpochDay()
         }
     }
 
@@ -56,5 +60,6 @@ class DataStoreTaxaCache(context: Context) : TaxaCache {
         val KEY_SELIC = floatPreferencesKey("selic_anual_percentual")
         val KEY_IPCA = floatPreferencesKey("ipca_12_meses_percentual")
         val KEY_DIA = longPreferencesKey("atualizada_em_epoch_day")
+        val KEY_SALVO_EM = longPreferencesKey("salvo_em_epoch_day")
     }
 }
