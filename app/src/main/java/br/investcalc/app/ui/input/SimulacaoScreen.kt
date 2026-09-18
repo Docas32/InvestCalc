@@ -68,7 +68,7 @@ fun SimulacaoScreen(
     var aporteMensalTexto by remember { mutableStateOf("200") }
     var mesesTexto by remember { mutableStateOf("12") }
     var percentualCdiTexto by remember { mutableStateOf("100") }
-    var taxaDiTexto by remember { mutableStateOf(taxaDiAnualAutomatica.formatarTaxa()) }
+    var taxaDiTexto by remember { mutableStateOf(taxaDiAnualAutomatica.formatarTaxaUi()) }
     var taxaDiEditadaManualmente by remember { mutableStateOf(false) }
     var taxaMensalManualTexto by remember { mutableStateOf("") }
     var modoAvancado by remember { mutableStateOf(false) }
@@ -93,7 +93,7 @@ fun SimulacaoScreen(
     // campo — a menos que o usuário já o tenha editado à mão.
     LaunchedEffect(taxaDiAnualAutomatica) {
         if (!taxaDiEditadaManualmente) {
-            taxaDiTexto = taxaDiAnualAutomatica.formatarTaxa()
+            taxaDiTexto = taxaDiAnualAutomatica.formatarTaxaUi()
         }
     }
 
@@ -119,8 +119,8 @@ fun SimulacaoScreen(
     val linhaTaxaMensal = if (percentualValido || (modoAvancado && taxaMensalManual > 0.0)) {
         stringResource(
             R.string.taxa_mensal_efetiva,
-            taxaMensalUsada.formatarTaxa(),
-            (taxaMensalUsada / 100.0).mensalParaAnualPercentual().formatarTaxa(),
+            taxaMensalUsada.formatarTaxaUi(),
+            (taxaMensalUsada / 100.0).mensalParaAnualPercentual().formatarTaxaUi(),
         )
     } else {
         stringResource(R.string.taxa_mensal_efetiva_vazia)
@@ -297,7 +297,8 @@ private fun taxaMensalEfetiva(taxaDiAnualPercentual: Double, percentualCdi: Doub
 private fun Double.mensalParaAnualPercentual(): Double =
     (Math.pow(1.0 + this, 12.0) - 1.0) * 100.0
 
-private fun Double.formatarTaxa(): String =
+/** Formata taxa percentual com vírgula decimal; remove zeros à direita. */
+internal fun Double.formatarTaxaUi(): String =
     String.format(Locale.ROOT, "%.4f", this).replace('.', ',').trimEnd('0').trimEnd(',')
 
 /** Aceita decimal com virgula OU ponto ("92,5" e "92.5"); null se invalido. */

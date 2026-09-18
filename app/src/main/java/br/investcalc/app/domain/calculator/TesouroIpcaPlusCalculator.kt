@@ -11,7 +11,7 @@ import kotlin.math.roundToInt
  *   onde `taxaReal` é o cupom contratado e `ipca` a inflação projetada.
  * - Convertida para mensal por equivalência exponencial.
  * - Juros compostos mensais (aporte postecipado).
- * - IR regressivo.
+ * - IR regressivo **por meses civis** (mesma tabela do CDB: 22,5/20/17,5/15%).
  *
  * ## Limitações (documentadas)
  * - O IPCA é tratado como constante (projeção) durante todo o prazo.
@@ -35,7 +35,7 @@ object TesouroIpcaPlusCalculator {
         val taxaEfetivaAnual = taxaAnualComposta(ipcaAnual, taxaRealAnual)
         val taxaMensal = RateConverter.anualParaMensal(taxaEfetivaAnual)
         val diasCorridos = (meses.toDouble() * 30.44).roundToInt()
-        val aliquota = IncomeTax.aliquotaPorDias(diasCorridos)
+        val aliquota = IncomeTax.aliquotaPorMeses(meses)
         val totalInvestido = valorInicial.plus(aporteMensal.times(meses.toDouble()))
         val valorBruto = CompoundGrowth.montante(valorInicial, aporteMensal, taxaMensal, meses)
         val rendimentoBruto = valorBruto.minus(totalInvestido)

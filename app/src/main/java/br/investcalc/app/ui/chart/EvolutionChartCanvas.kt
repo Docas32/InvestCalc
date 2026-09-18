@@ -79,8 +79,10 @@ fun EvolutionChartCanvas(
     val corCartao = MaterialTheme.colorScheme.surfaceVariant
     val corBordaCartao = MaterialTheme.colorScheme.outline
     val corTexto = MaterialTheme.colorScheme.onSurface
+    val corRotuloEixo = MaterialTheme.colorScheme.outline
     val estiloTitulo = MaterialTheme.typography.titleSmall.copy(color = corTexto)
     val estiloCorpo = MaterialTheme.typography.bodySmall.copy(color = corTexto)
+    val estiloRotulo = MaterialTheme.typography.bodySmall.copy(color = corRotuloEixo)
 
     val textMeasurer = rememberTextMeasurer()
     var selecionado by remember { mutableStateOf<Int?>(null) }
@@ -185,7 +187,35 @@ fun EvolutionChartCanvas(
         drawCircle(color = corPatrimonio, radius = 3.6.dp.toPx(), center = Offset(x(n - 1), y(ultimo.saldoCompostoFimDoMes)))
         drawCircle(color = corTotalInvestido, radius = 3.2.dp.toPx(), center = Offset(x(n - 1), y(ultimo.totalInvestidoFimDoMes)))
 
-        // 5. Tooltip no mês selecionado, com clamp nas bordas (X e Y).
+        // 5. Rótulos mínimos dos eixos: mês inicial/final no X e valor
+        //    inicial/final no Y (discretos, na cor de contorno do tema).
+        fun medirRotulo(texto: String): TextLayoutResult =
+            textMeasurer.measure(AnnotatedString(texto), estiloRotulo)
+
+        val rotuloMesIni = medirRotulo(formatoMes.format(pontos.first().mes))
+        val rotuloMesFim = medirRotulo(formatoMes.format(pontos.last().mes))
+        val rotuloValIni = medirRotulo(formatarMoeda(pontos.first().totalInvestidoFimDoMes))
+        val rotuloValFim = medirRotulo(formatarMoeda(topo))
+
+        val baseY = altura - 2.dp.toPx() - rotuloMesIni.size.height
+        drawText(
+            rotuloMesIni,
+            topLeft = Offset(padX, baseY),
+        )
+        drawText(
+            rotuloMesFim,
+            topLeft = Offset(largura - padX - rotuloMesFim.size.width, baseY),
+        )
+        drawText(
+            rotuloValIni,
+            topLeft = Offset(padX, baseY - 2.dp.toPx() - rotuloValIni.size.height),
+        )
+        drawText(
+            rotuloValFim,
+            topLeft = Offset(padX, padY),
+        )
+
+        // 6. Tooltip no mês selecionado, com clamp nas bordas (X e Y).
         val idx = selecionado
         val textos = tooltipTextos
         if (idx != null && textos != null) {

@@ -62,6 +62,27 @@
 
     <string name="tesouro_title">Treasury Direct</string>
     <string name="tesouro_desc">Treasury bond returns will be calculated here.</string>
+    <string name="tesouro_aba_selic">Selic</string>
+    <string name="tesouro_aba_ipca">IPCA+</string>
+    <string name="tesouro_aba_prefixado">Fixed rate</string>
+    <string name="campo_taxa_selic" formatted="false">Selic rate (% p.a.)</string>
+    <string name="campo_ipca" formatted="false">IPCA (% p.a.)</string>
+    <string name="campo_taxa_real" formatted="false">Real rate (% p.a.)</string>
+    <string name="hint_taxa_real">e.g. 6.20</string>
+    <string name="campo_taxa_prefixada" formatted="false">Contracted rate (% p.a.)</string>
+    <string name="tesouro_nota_b3" formatted="false">B3 fee: R$ 0.20 per year per bond (exempt up to R$ 10,000 invested)</string>
+    <string name="erro_taxa_selic" formatted="false">Enter the Selic rate (% p.a.) &gt; 0.</string>
+    <string name="erro_taxa_real" formatted="false">Enter a real rate (% p.a.) &gt; 0.</string>
+    <string name="erro_taxa_prefixada" formatted="false">Enter the contracted rate (% p.a.) &gt; 0.</string>
     <string name="comparar_title">Compare</string>
     <string name="comparar_desc">Coming soon: compare investments side by side.</string>
+    <string name="campo_percentual_cdb" formatted="false">CDB (% of DI)</string>
+    <string name="campo_percentual_lci" formatted="false">LCI/LCA (% of DI)</string>
+    <string name="comparador_resultado_title">CDB vs LCI/LCA comparison</string>
+    <string name="comparador_cdb_liquido">Net CDB</string>
+    <string name="comparador_lci_liquido">Net LCI/LCA</string>
+    <string name="comparador_vencedor_cdb">CDB wins by %1$s</string>
+    <string name="comparador_vencedor_lci">LCI/LCA wins by %1$s</string>
+    <string name="comparador_empate">Tie by %1$s</string>
+    <string name="comparador_equilibrio">LCI at %1$s%% equals a CDB at %2$s%% for this term</string>
 </resources>

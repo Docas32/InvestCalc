@@ -10,7 +10,7 @@ import kotlin.math.roundToInt
  * - A taxa efetiva é a taxa Selic **anual** (pós-fixada), convertida para
  *   mensal por equivalência exponencial.
  * - Juros compostos mensais (aporte postecipado).
- * - IR regressivo pela tabela da renda fixa.
+ * - IR regressivo **por meses civis** (mesma tabela do CDB: 22,5/20/17,5/15%).
  *
  * ## Limitações (documentadas)
  * - Não modela o **deságio** ao vender o título antes do vencimento (marcação
@@ -27,7 +27,7 @@ object TesouroSelicCalculator {
     ): InvestmentResult {
         val taxaMensal = RateConverter.anualParaMensal(taxaSelicAnual)
         val diasCorridos = (meses.toDouble() * 30.44).roundToInt()
-        val aliquota = IncomeTax.aliquotaPorDias(diasCorridos)
+        val aliquota = IncomeTax.aliquotaPorMeses(meses)
         val totalInvestido = valorInicial.plus(aporteMensal.times(meses.toDouble()))
         val valorBruto = CompoundGrowth.montante(valorInicial, aporteMensal, taxaMensal, meses)
         val rendimentoBruto = valorBruto.minus(totalInvestido)

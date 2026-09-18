@@ -1,18 +1,14 @@
 package br.investcalc.app.ui.navigation
 
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.CompareArrows
 import androidx.compose.material.icons.filled.AccountBalance
 import androidx.compose.material.icons.filled.Calculate
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
@@ -43,9 +39,12 @@ import br.investcalc.app.domain.chart.EvolutionChartBuilder
 import br.investcalc.app.domain.chart.PatrimonioSeries
 import br.investcalc.app.domain.model.InvestmentResult
 import br.investcalc.app.ui.chart.EvolutionChartScreen
+import br.investcalc.app.ui.compare.ComparadorScreen
 import br.investcalc.app.ui.input.SimulacaoScreen
 import br.investcalc.app.ui.input.TAXA_DI_ANUAL_FALLBACK_PERCENTUAL
+import br.investcalc.app.ui.result.ResumoResultado
 import br.investcalc.app.ui.settings.AjustesScreen
+import br.investcalc.app.ui.tesouro.TesouroScreen
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
@@ -55,19 +54,32 @@ private const val ROTA_COMPARAR = "comparar"
 private const val ROTA_AJUSTES = "ajustes"
 
 /**
- * Navegacao principal do InvestCalc (Material 3, sem rede, sem Firebase).
+ * Navegação principal do InvestCalc (Material 3, sem redes fora do BCB).
  *
  * Bottom nav com 4 abas (Calculadora, Tesouro Direto, Comparar, Ajustes).
- * A aba Calculadora mantem o fluxo local SimulacaoScreen -> EvolutionChartScreen
- * (estado em memoria, nunca persistido); a serie mensal da simulacao
- * ([PatrimonioSeries]) e convertida para o grafico via
- * [EvolutionChartBuilder.dePatrimonio].
+ * Uma única camada de taxas ([BcbRatesRepository]) é compartilhada pelas três
+ * abas de cálculo — nada de infra paralela: refresh em segundo plano no cold
+ * start e badge "BCB · dd/mm" / "fallback" derivadas do mesmo snapshot.
  */
 @Composable
 fun AppNavHost(modifier: Modifier = Modifier) {
     val navController = rememberNavController()
     val backStack by navController.currentBackStackEntryAsState()
     val rotaAtual = backStack?.destination?.route
+
+    val contexto = LocalContext.current
+    val repositorioTaxas = remember {
+        BcbRatesRepository(
+            api = BcbApiFactory.criar(),
+            cache = DataStoreTaxaCache(contexto),
+        )
+    }
+
+    LaunchedEffect(Unit) {
+        repositorioTaxas.atualizar()
+    }
+    val taxaSnapshot by repositorioTaxas.state.collectAsState()
+    val origemLabel = rotuloOrigemTaxa(taxaSnapshot)
 
     Scaffold(
         modifier = modifier,
@@ -105,19 +117,9 @@ fun AppNavHost(modifier: Modifier = Modifier) {
             startDestination = ROTA_CALCULADORA,
             modifier = Modifier.fillMaxSize().padding(innerPadding),
         ) {
-            composable(ROTA_CALCULADORA) { AbaCalculadora() }
-            composable(ROTA_TESOURO) {
-                AbaTexto(
-                    titulo = stringResource(R.string.tesouro_title),
-                    descricao = stringResource(R.string.tesouro_desc),
-                )
-            }
-            composable(ROTA_COMPARAR) {
-                AbaTexto(
-                    titulo = stringResource(R.string.comparar_title),
-                    descricao = stringResource(R.string.comparar_desc),
-                )
-            }
+            composable(ROTA_CALCULADORA) { AbaCalculadora(taxaSnapshot, origemLabel) }
+            composable(ROTA_TESOURO) { TesouroScreen(taxaSnapshot, origemLabel) }
+            composable(ROTA_COMPARAR) { ComparadorScreen(taxaSnapshot, origemLabel) }
             composable(ROTA_AJUSTES) {
                 AjustesScreen(
                     consentimentoAdsAtivo = false,
@@ -137,24 +139,10 @@ private fun androidx.navigation.NavHostController.navigarPara(rota: String) {
 }
 
 @Composable
-private fun AbaCalculadora() {
+private fun AbaCalculadora(taxaSnapshot: RatesSnapshot, origemLabel: String) {
     var serie by remember { mutableStateOf<PatrimonioSeries?>(null) }
     var resultado by remember { mutableStateOf<InvestmentResult?>(null) }
 
-    val contexto = LocalContext.current
-    val repositorioTaxas = remember {
-        BcbRatesRepository(
-            api = BcbApiFactory.criar(),
-            cache = DataStoreTaxaCache(contexto),
-        )
-    }
-
-    LaunchedEffect(Unit) {
-        repositorioTaxas.atualizar()
-    }
-    val taxaSnapshot by repositorioTaxas.state.collectAsState()
-
-    val origemLabel = rotuloOrigemTaxa(taxaSnapshot)
     val taxaDiAutomatica = taxaSnapshot.taxaCdiAnualPercentual
         .takeIf { it > 0.0 }
         ?: TAXA_DI_ANUAL_FALLBACK_PERCENTUAL
@@ -178,9 +166,7 @@ private fun AbaCalculadora() {
             TextButton(onClick = { serie = null; resultado = null }) {
                 Text(stringResource(R.string.voltar))
             }
-            resultado?.let { ir ->
-                ResumoResultado(ir)
-            }
+            resultado?.let { ResumoResultado(it) }
             EvolutionChartScreen(
                 series = chart,
                 onTooltipUsed = {},
@@ -198,68 +184,4 @@ private fun rotuloOrigemTaxa(snapshot: RatesSnapshot): String {
         R.string.origem_taxa_bcb,
         data.format(DateTimeFormatter.ofPattern("dd/MM", Locale.ROOT)),
     )
-}
-
-@Composable
-private fun ResumoResultado(resultado: InvestmentResult) {
-    Column(modifier = Modifier.padding(16.dp)) {
-        Text(
-            text = stringResource(R.string.resultado_title),
-            style = MaterialTheme.typography.titleMedium,
-        )
-        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-        LinhaResumo(
-            rotulo = stringResource(R.string.resultado_valor_bruto),
-            centavos = resultado.valorBruto.cents,
-        )
-        LinhaResumo(
-            rotulo = stringResource(R.string.resultado_total_investido),
-            centavos = resultado.valorInvestido.cents,
-        )
-        LinhaResumo(
-            rotulo = stringResource(R.string.resultado_rendimento_bruto),
-            centavos = resultado.rendimentoBruto.cents,
-        )
-        LinhaResumo(
-            rotulo = stringResource(
-                R.string.resultado_ir,
-                "%.1f".format(Locale.ROOT, resultado.aliquotaIr * 100.0) + "%",
-            ),
-            centavos = resultado.irPago.cents,
-        )
-        LinhaResumo(
-            rotulo = stringResource(R.string.resultado_valor_liquido),
-            centavos = resultado.valorLiquido.cents,
-            destaque = true,
-        )
-    }
-}
-
-@Composable
-private fun LinhaResumo(rotulo: String, centavos: Long, destaque: Boolean = false) {
-    Row(modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp)) {
-        Text(
-            text = rotulo + ": ",
-            modifier = Modifier.weight(1f),
-            style = if (destaque) MaterialTheme.typography.titleMedium else MaterialTheme.typography.bodyMedium,
-            color = if (destaque) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
-        )
-        Text(
-            text = "R$ " + formatarCentavos(centavos),
-            style = if (destaque) MaterialTheme.typography.titleMedium else MaterialTheme.typography.bodyMedium,
-            color = if (destaque) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
-        )
-    }
-}
-
-private fun formatarCentavos(centavos: Long): String =
-    String.format(Locale.ROOT, "%,.2f", centavos / 100.0)
-
-@Composable
-private fun AbaTexto(titulo: String, descricao: String) {
-    Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
-        Text(text = titulo, style = MaterialTheme.typography.titleLarge)
-        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-        Text(text = descricao, style = MaterialTheme.typography.bodyMedium)
-    }
 }

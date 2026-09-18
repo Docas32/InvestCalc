@@ -15,7 +15,8 @@ class TesouroSelicCalculatorTest {
         val taxaSelicAnual = Math.pow(1.01, 12.0) - 1.0
         val resultado = TesouroSelicCalculator.calcular(inicial, zero, taxaSelicAnual, 24)
         assertTrue(resultado.valorBruto.cents > 120_000L)
-        assertEquals(0.15, resultado.aliquotaIr, 1e-9) // 24 meses -> >720 dias -> 15%
+        // P3: IR por meses civis (mesma tabela do CDB) — 24 meses → 17,5%.
+        assertEquals(0.175, resultado.aliquotaIr, 1e-9)
     }
 
     @Test
