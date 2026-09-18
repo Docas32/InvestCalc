@@ -41,6 +41,7 @@ import br.investcalc.app.data.rates.BcbRatesRepository
 import br.investcalc.app.data.rates.DataStoreTaxaCache
 import br.investcalc.app.data.rates.RatesSnapshot
 import br.investcalc.app.domain.chart.EvolutionChartBuilder
+import br.investcalc.app.domain.chart.JurosSimplesBaselineBuilder
 import br.investcalc.app.domain.chart.PatrimonioSeries
 import br.investcalc.app.domain.model.InvestmentResult
 import br.investcalc.app.ui.chart.EvolutionChartScreen
@@ -49,7 +50,6 @@ import br.investcalc.app.ui.input.TAXA_DI_ANUAL_FALLBACK_PERCENTUAL
 import br.investcalc.app.ui.settings.AjustesScreen
 import java.time.format.DateTimeFormatter
 import java.util.Locale
-import kotlin.math.pow
 
 private const val ROTA_CALCULADORA = "calculadora"
 private const val ROTA_TESOURO = "tesouro"
@@ -174,14 +174,14 @@ private fun AbaCalculadora() {
             }
             val totais = saldos.indices.map { m -> saldos[m] - jurosAcumulados[m] }
             val n = pontos.size.coerceAtLeast(1)
-            val totalFinal = totais.lastOrNull() ?: 0.0
-            val saldoFinal = saldos.lastOrNull() ?: 0.0
-            val taxaMensal = if (totalFinal > 0.0 && saldoFinal > 0.0) {
-                (saldoFinal / totalFinal).pow(1.0 / n) - 1.0
-            } else {
-                0.0
-            }
-            val baseline = List(n) { m -> totais[m] * taxaMensal * (m + 1) }
+            // Baseline de juros simples com a taxa efetiva real usada na
+            // simulacao: P*i*m + A*i*m*(m-1)/2 (ver JurosSimplesBaselineBuilder).
+            val baseline = JurosSimplesBaselineBuilder.construir(
+                valorInicial = s.valorInicial,
+                aporteMensal = s.aporteMensal,
+                meses = n,
+                taxaPercentualMensal = s.taxaMensalPercentual,
+            ).pontos.map { it.jurosSimplesAcumuladoFimDoMes }
             EvolutionChartBuilder.construir(
                 meses = pontos.map { it.inicioDoMes },
                 totalInvestidoFimDoMes = totais,

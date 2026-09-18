@@ -79,6 +79,37 @@ class CdbComTaxaDiPercentualTest {
         assertEquals(263.33, r.rendimentoBruto.reais(), 0.01)
         assertEquals(0.20, r.aliquotaIr, 1e-9)
     }
+
+    @Test
+    fun `P1 1 pct 110 DI 13 90 1000 sem aporte 12 meses mes1 11 93 e bruto 1152 90`() {
+        val r = CdbCalculator.calcularComTaxaDiAnualPercentual(
+            valorInicial = inicial,
+            aporteMensal = zero,
+            percentualCdi = 110.0,
+            taxaDiAnualPercentual = 13.90,
+            meses = 12,
+        )
+        // O pct TEM de chegar ao motor: 13,90 x 1,10 = 15,29% a.a. -> 1.152,90.
+        assertEquals(1_152.90, r.valorBruto.reais(), 0.05)
+        val iMensal = RateConverter.anualParaMensal(0.139 * 1.10)
+        assertEquals(11.93, 1_000.0 * iMensal, 0.02) // mes 1 = 1000 x i
+    }
+
+    @Test
+    fun `P1 1 pct 92 5 decimal efetiva mensal 1 0131`() {
+        val efetivaAnual = 13.90 * 0.925 / 100.0
+        val iMensalPercent = RateConverter.anualParaMensal(efetivaAnual) * 100.0
+        assertEquals(1.0131, iMensalPercent, 0.0005)
+
+        val r = CdbCalculator.calcularComTaxaDiAnualPercentual(
+            valorInicial = inicial,
+            aporteMensal = zero,
+            percentualCdi = 92.5,
+            taxaDiAnualPercentual = 13.90,
+            meses = 12,
+        )
+        assertEquals(1_000.0 * (1.0 + efetivaAnual), r.valorBruto.reais(), 0.05)
+    }
 }
 
 private fun MonetaryValue.reais(): Double = cents / 100.0

@@ -29,6 +29,9 @@ data class PatrimonioPoint(
  */
 data class PatrimonioSeries(
     val pontos: List<PatrimonioPoint>,
+    val valorInicial: Double = 0.0,
+    val aporteMensal: Double = 0.0,
+    val taxaMensalPercentual: Double = 0.0,
 ) {
     init {
         require(pontos.map { it.inicioDoMes }.toSortedSet().toList() == pontos.map { it.inicioDoMes }) {
@@ -95,7 +98,12 @@ object PatrimonioSeriesBuilder {
             )
         }
 
-        return PatrimonioSeries(pontos = pontos)
+        return PatrimonioSeries(
+            pontos = pontos,
+            valorInicial = p0,
+            aporteMensal = a,
+            taxaMensalPercentual = taxaMensalPercentual,
+        )
     }
 
     /** Normaliza valores não finitos para 0.0 (hermeticidade máxima). */

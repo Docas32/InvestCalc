@@ -1,6 +1,5 @@
 package br.investcalc.app.ui.input
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -10,7 +9,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -30,24 +28,28 @@ import br.investcalc.app.domain.model.InvestmentResult
 import br.investcalc.app.domain.model.MonetaryValue
 import java.util.Locale
 
-private val PERCENTUAIS_CDI = listOf(80, 90, 95, 100, 105, 110)
-
 /** Taxa DI anual padrão quando ainda não há taxa do BCB (fallback P3). */
 const val TAXA_DI_ANUAL_FALLBACK_PERCENTUAL = 10.90
+
+private const val PERCENTUAL_CDI_MIN = 0.0
+private const val PERCENTUAL_CDI_MAX = 1000.0
 
 /**
  * Fatia S3 - formulario de simulacao CDI/CDB (hermetico, ASCII puro,
  * sem rede nesta tela; a taxa do BCB chega pronta por parametro).
  *
  * Campos:
- *  - "Percentual do CDI (%)": chips 80/90/95/100/105/110, default 100;
+ *  - "Percentual do CDI (%)": texto livre (default 100) aceitando decimais
+ *    com virgula ou ponto ("92,5" e "92.5" -> 92.5); valida 0 < pct <= 1000;
  *  - "Taxa DI (% a.a.)": preenchida automaticamente pela camada de taxas
  *    (BCB · dd/mm ou "fallback"), editavel pelo usuario;
- *  - taxa mensal efetiva = (1 + (DI/100 * pct/100))^(1/12) - 1, mostrada
- *    como texto pequeno;
+ *  - taxa mensal efetiva = (1 + (DI/100 * pct/100))^(1/12) - 1, recalculada
+ *    AO VIVO a cada digitação (percentual ou DI), sem tocar em Simular;
  *  - "Taxa de juros (% ao mes)" (heranca) fica em **modo avancado**
- *    recolhido; quando preenchido e > 0, sobrescreve a taxa derivada do CDI
- *    (menor churn: o campo antigo apenas muda de lugar e de relevancia).
+ *    recolhido; quando preenchido e > 0, sobrescreve a taxa derivada do CDI.
+ *
+ * O percentual usado no calculo e sempre o lido do campo no momento do toque
+ * em Simular (fonte unica de verdade — ver análise da causa raiz P1.1).
  *
  * Fluxo de resultado: devolve [InvestmentResult] (bruto/investido/
  * rendimento/IR/liquido) alem da [PatrimonioSeries] para o grafico.
@@ -63,7 +65,7 @@ fun SimulacaoScreen(
     var valorInicialTexto by remember { mutableStateOf("1000") }
     var aporteMensalTexto by remember { mutableStateOf("200") }
     var mesesTexto by remember { mutableStateOf("12") }
-    var percentualCdi by remember { mutableStateOf(100) }
+    var percentualCdiTexto by remember { mutableStateOf("100") }
     var taxaDiTexto by remember { mutableStateOf(taxaDiAnualAutomatica.formatarTaxa()) }
     var taxaDiEditadaManualmente by remember { mutableStateOf(false) }
     var taxaMensalManualTexto by remember { mutableStateOf("") }
@@ -78,13 +80,33 @@ fun SimulacaoScreen(
         }
     }
 
-    val lerDouble = { texto: String -> texto.trim().replace(',', '.').toDoubleOrNull() ?: 0.0 }
     val meses = mesesTexto.trim().toIntOrNull()?.coerceAtLeast(1) ?: 12
 
-    val taxaDi = lerDouble(taxaDiTexto)
-    val taxaMensalDerivada = taxaMensalEfetiva(taxaDi, percentualCdi)
-    val taxaMensalManual = lerDouble(taxaMensalManualTexto)
-    val taxaMensalUsada = if (modoAvancado && taxaMensalManual > 0.0) taxaMensalManual else taxaMensalDerivada
+    val percentualCdi = percentualCdiTexto.parseDecimalBr()
+    val percentualValido = percentualCdi != null &&
+        percentualCdi > PERCENTUAL_CDI_MIN &&
+        percentualCdi <= PERCENTUAL_CDI_MAX
+
+    val taxaDi = taxaDiTexto.parseDecimalBr() ?: 0.0
+    val taxaMensalDerivada = if (percentualValido) {
+        taxaMensalEfetiva(taxaDi, percentualCdi!!)
+    } else {
+        0.0
+    }
+    val taxaMensalManual = taxaMensalManualTexto.parseDecimalBr() ?: 0.0
+    val taxaMensalUsada = if (modoAvancado && taxaMensalManual > 0.0) {
+        taxaMensalManual
+    } else {
+        taxaMensalDerivada
+    }
+    val linhaTaxaMensal = if (percentualValido || (modoAvancado && taxaMensalManual > 0.0)) {
+        "Taxa mensal efetiva: " + taxaMensalUsada.formatarTaxa() +
+            "% a.m. (equiv. " +
+            (taxaMensalUsada / 100.0).mensalParaAnualPercentual().formatarTaxa() +
+            "% a.a.)"
+    } else {
+        "Taxa mensal efetiva: -- (informe o percentual do CDI)"
+    }
 
     Column(
         modifier = Modifier
@@ -123,27 +145,25 @@ fun SimulacaoScreen(
             singleLine = true,
             modifier = Modifier.fillMaxWidth(),
         )
-        Spacer(Modifier.height(12.dp))
+        Spacer(Modifier.height(8.dp))
 
-        Text(
-            text = "Percentual do CDI (%)",
-            style = MaterialTheme.typography.bodyMedium,
-        )
-        Spacer(Modifier.height(6.dp))
-        Row(
+        OutlinedTextField(
+            value = percentualCdiTexto,
+            onValueChange = {
+                percentualCdiTexto = it
+                aviso = null
+            },
+            label = { Text("Percentual do CDI (%)") },
+            singleLine = true,
+            isError = !percentualValido,
+            supportingText = if (!percentualValido) {
+                { Text("Informe um numero maior que 0 e no maximo 1000.") }
+            } else {
+                null
+            },
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            PERCENTUAIS_CDI.forEach { valor ->
-                FilterChip(
-                    selected = percentualCdi == valor,
-                    onClick = { percentualCdi = valor },
-                    label = { Text(valor.toString()) },
-                    modifier = Modifier.weight(1f),
-                )
-            }
-        }
-        Spacer(Modifier.height(12.dp))
+        )
+        Spacer(Modifier.height(8.dp))
 
         OutlinedTextField(
             value = taxaDiTexto,
@@ -163,8 +183,7 @@ fun SimulacaoScreen(
         Spacer(Modifier.height(8.dp))
 
         Text(
-            text = "Taxa mensal efetiva: " + taxaMensalUsada.formatarTaxa() + "% a.m. "
-                + "(equiv. " + (taxaMensalUsada / 100.0).mensalParaAnualPercentual().formatarTaxa() + "% a.a.)",
+            text = linhaTaxaMensal,
             style = MaterialTheme.typography.bodySmall,
         )
         Spacer(Modifier.height(8.dp))
@@ -186,41 +205,46 @@ fun SimulacaoScreen(
         Row(modifier = Modifier.fillMaxWidth()) {
             Button(
                 onClick = {
-                    val valorInicial = lerDouble(valorInicialTexto)
-                    val aporteMensal = lerDouble(aporteMensalTexto)
+                    val valorInicial = valorInicialTexto.parseDecimalBr() ?: 0.0
+                    val aporteMensal = aporteMensalTexto.parseDecimalBr() ?: 0.0
                     val usarManual = modoAvancado && taxaMensalManual > 0.0
-                    if (modoAvancado && taxaMensalManual <= 0.0) {
-                        aviso = "Informe a taxa mensal manual > 0 ou use a taxa do CDI."
-                    } else if (taxaMensalUsada <= 0.0) {
-                        aviso = "Informe a Taxa DI (% a.a.) > 0."
-                    } else if (valorInicial <= 0.0 && aporteMensal <= 0.0) {
-                        aviso = "Informe valor inicial ou aporte mensal > 0."
-                    } else {
-                        aviso = null
-                        val serie = PatrimonioSeriesBuilder.construir(
-                            valorInicial = valorInicial,
-                            aporteMensal = aporteMensal,
-                            meses = meses,
-                            taxaMensalPercentual = taxaMensalUsada,
-                        )
-                        val resultado = if (usarManual) {
-                            CdbCalculator.calcularComTaxaMensal(
-                                valorInicial = MonetaryValue.ofReais(valorInicial),
-                                aporteMensal = MonetaryValue.ofReais(aporteMensal),
-                                taxaMensalEfetiva = taxaMensalManual / 100.0,
+                    when {
+                        !percentualValido ->
+                            aviso = "Percentual do CDI deve ser maior que 0 e no maximo 1000."
+                        modoAvancado && taxaMensalManual <= 0.0 ->
+                            aviso = "Informe a taxa mensal manual > 0 ou use a taxa do CDI."
+                        taxaMensalUsada <= 0.0 ->
+                            aviso = "Informe a Taxa DI (% a.a.) > 0."
+                        valorInicial <= 0.0 && aporteMensal <= 0.0 ->
+                            aviso = "Informe valor inicial ou aporte mensal > 0."
+                        else -> {
+                            aviso = null
+                            val serie = PatrimonioSeriesBuilder.construir(
+                                valorInicial = valorInicial,
+                                aporteMensal = aporteMensal,
                                 meses = meses,
+                                taxaMensalPercentual = taxaMensalUsada,
                             )
-                        } else {
-                            CdbCalculator.calcularComTaxaDiAnualPercentual(
-                                valorInicial = MonetaryValue.ofReais(valorInicial),
-                                aporteMensal = MonetaryValue.ofReais(aporteMensal),
-                                percentualCdi = percentualCdi.toDouble(),
-                                taxaDiAnualPercentual = taxaDi,
-                                meses = meses,
-                            )
+                            val resultado = if (usarManual) {
+                                CdbCalculator.calcularComTaxaMensal(
+                                    valorInicial = MonetaryValue.ofReais(valorInicial),
+                                    aporteMensal = MonetaryValue.ofReais(aporteMensal),
+                                    taxaMensalEfetiva = taxaMensalManual / 100.0,
+                                    meses = meses,
+                                )
+                            } else {
+                                // pct vem do MESMO texto do campo no instante do clique.
+                                CdbCalculator.calcularComTaxaDiAnualPercentual(
+                                    valorInicial = MonetaryValue.ofReais(valorInicial),
+                                    aporteMensal = MonetaryValue.ofReais(aporteMensal),
+                                    percentualCdi = percentualCdi ?: 0.0,
+                                    taxaDiAnualPercentual = taxaDi,
+                                    meses = meses,
+                                )
+                            }
+                            onSeriePronta(serie)
+                            onResultadoPronto(resultado)
                         }
-                        onSeriePronta(serie)
-                        onResultadoPronto(resultado)
                     }
                 },
                 modifier = Modifier.weight(1f),
@@ -245,7 +269,7 @@ fun SimulacaoScreen(
 }
 
 /** (1 + (DI/100 * pct/100))^(1/12) - 1, em percentual a.m. */
-private fun taxaMensalEfetiva(taxaDiAnualPercentual: Double, percentualCdi: Int): Double {
+private fun taxaMensalEfetiva(taxaDiAnualPercentual: Double, percentualCdi: Double): Double {
     val diFracao = taxaDiAnualPercentual / 100.0
     val pctFracao = percentualCdi / 100.0
     val fatorAnual = 1.0 + diFracao * pctFracao
@@ -257,3 +281,7 @@ private fun Double.mensalParaAnualPercentual(): Double =
 
 private fun Double.formatarTaxa(): String =
     String.format(Locale.ROOT, "%.4f", this).replace('.', ',').trimEnd('0').trimEnd(',')
+
+/** Aceita decimal com virgula OU ponto ("92,5" e "92.5"); null se invalido. */
+internal fun String.parseDecimalBr(): Double? =
+    trim().replace(',', '.').toDoubleOrNull()
