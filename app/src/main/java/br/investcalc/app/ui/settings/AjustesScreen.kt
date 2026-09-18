@@ -29,10 +29,8 @@ import androidx.compose.ui.unit.dp
 fun AjustesScreen(
     consentimentoAdsAtivo: Boolean,
     notificacoesAtivas: Boolean,
-    cacheTaxasOcupado: Boolean,
     onAlternativeConsentimento: () -> Unit,
     onAlternarNotificacoes: () -> Unit,
-    onRecarregarTaxas: () -> Unit,
 ) {
     var consentimentoLocal by remember { mutableStateOf(consentimentoAdsAtivo) }
     var notificacoesLocal by remember { mutableStateOf(notificacoesAtivas) }
@@ -62,13 +60,6 @@ fun AjustesScreen(
                 notificacoesLocal = !notificacoesLocal
                 onAlternarNotificacoes()
             },
-        )
-        HorizontalDivider()
-        LinhaToggle(
-            rotulo = "Taxas do BCB",
-            descricao = if (cacheTaxasOcupado) "Cache local ativo" else "Cache vazio",
-            ligado = cacheTaxasOcupado,
-            onToggle = { onRecarregarTaxas() },
         )
     }
 }

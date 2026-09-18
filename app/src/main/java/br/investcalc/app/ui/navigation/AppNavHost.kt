@@ -1,13 +1,16 @@
 package br.investcalc.app.ui.navigation
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.CompareArrows
 import androidx.compose.material.icons.filled.AccountBalance
 import androidx.compose.material.icons.filled.Calculate
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -17,11 +20,14 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -30,11 +36,19 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import br.investcalc.app.R
+import br.investcalc.app.data.rates.BcbApiFactory
+import br.investcalc.app.data.rates.BcbRatesRepository
+import br.investcalc.app.data.rates.DataStoreTaxaCache
+import br.investcalc.app.data.rates.RatesSnapshot
 import br.investcalc.app.domain.chart.EvolutionChartBuilder
 import br.investcalc.app.domain.chart.PatrimonioSeries
+import br.investcalc.app.domain.model.InvestmentResult
 import br.investcalc.app.ui.chart.EvolutionChartScreen
 import br.investcalc.app.ui.input.SimulacaoScreen
+import br.investcalc.app.ui.input.TAXA_DI_ANUAL_FALLBACK_PERCENTUAL
 import br.investcalc.app.ui.settings.AjustesScreen
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 import kotlin.math.pow
 
 private const val ROTA_CALCULADORA = "calculadora"
@@ -109,10 +123,8 @@ fun AppNavHost(modifier: Modifier = Modifier) {
                 AjustesScreen(
                     consentimentoAdsAtivo = false,
                     notificacoesAtivas = false,
-                    cacheTaxasOcupado = false,
                     onAlternativeConsentimento = {},
                     onAlternarNotificacoes = {},
-                    onRecarregarTaxas = {},
                 )
             }
         }
@@ -130,6 +142,25 @@ private fun androidx.navigation.NavHostController.navigarPara(rota: String) {
 @Composable
 private fun AbaCalculadora() {
     var serie by remember { mutableStateOf<PatrimonioSeries?>(null) }
+    var resultado by remember { mutableStateOf<InvestmentResult?>(null) }
+
+    val contexto = LocalContext.current
+    val repositorioTaxas = remember {
+        BcbRatesRepository(
+            api = BcbApiFactory.criar(),
+            cache = DataStoreTaxaCache(contexto),
+        )
+    }
+
+    LaunchedEffect(Unit) {
+        repositorioTaxas.atualizar()
+    }
+    val taxaSnapshot by repositorioTaxas.state.collectAsState()
+
+    val origemLabel = rotuloOrigemTaxa(taxaSnapshot)
+    val taxaDiAutomatica = taxaSnapshot.taxaCdiAnualPercentual
+        .takeIf { it > 0.0 }
+        ?: TAXA_DI_ANUAL_FALLBACK_PERCENTUAL
 
     val chart = remember(serie) {
         serie?.let { s ->
@@ -164,11 +195,17 @@ private fun AbaCalculadora() {
     if (serie == null) {
         SimulacaoScreen(
             onSeriePronta = { serie = it },
+            onResultadoPronto = { resultado = it },
             onVoltar = {},
+            taxaDiAnualAutomatica = taxaDiAutomatica,
+            taxaDiOrigemLabel = origemLabel,
         )
     } else {
         Column(modifier = Modifier.fillMaxSize()) {
-            TextButton(onClick = { serie = null }) { Text("Voltar") }
+            TextButton(onClick = { serie = null; resultado = null }) { Text("Voltar") }
+            resultado?.let { ir ->
+                ResumoResultado(ir)
+            }
             EvolutionChartScreen(
                 series = chart,
                 onTooltipUsed = {},
@@ -177,6 +214,52 @@ private fun AbaCalculadora() {
         }
     }
 }
+
+/** "BCB · dd/mm" quando há data de atualização; senão "fallback". */
+private fun rotuloOrigemTaxa(snapshot: RatesSnapshot): String {
+    val data = snapshot.atualizadaEm ?: return "fallback"
+    return "BCB · " + data.format(DateTimeFormatter.ofPattern("dd/MM", Locale.ROOT))
+}
+
+@Composable
+private fun ResumoResultado(resultado: InvestmentResult) {
+    Column(modifier = Modifier.padding(16.dp)) {
+        Text(
+            text = "Resultado (com IR)",
+            style = MaterialTheme.typography.titleMedium,
+        )
+        HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+        LinhaResumo("Valor bruto", resultado.valorBruto.cents)
+        LinhaResumo("Total investido", resultado.valorInvestido.cents)
+        LinhaResumo("Rendimento bruto", resultado.rendimentoBruto.cents)
+        LinhaResumo("IR (" + "%.1f".format(Locale.ROOT, resultado.aliquotaIr * 100.0) + "%)", resultado.irPago.cents)
+        LinhaResumo(
+            "Valor liquido",
+            resultado.valorLiquido.cents,
+            destaque = true,
+        )
+    }
+}
+
+@Composable
+private fun LinhaResumo(rotulo: String, centavos: Long, destaque: Boolean = false) {
+    Row(modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp)) {
+        Text(
+            text = rotulo + ": ",
+            modifier = Modifier.weight(1f),
+            style = if (destaque) MaterialTheme.typography.titleMedium else MaterialTheme.typography.bodyMedium,
+            color = if (destaque) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+        )
+        Text(
+            text = "R$ " + formatarCentavos(centavos),
+            style = if (destaque) MaterialTheme.typography.titleMedium else MaterialTheme.typography.bodyMedium,
+            color = if (destaque) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+        )
+    }
+}
+
+private fun formatarCentavos(centavos: Long): String =
+    String.format(Locale.ROOT, "%,.2f", centavos / 100.0)
 
 @Composable
 private fun AbaTexto(titulo: String, descricao: String) {

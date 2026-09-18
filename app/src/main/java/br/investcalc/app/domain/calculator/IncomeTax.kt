@@ -35,6 +35,19 @@ object IncomeTax {
     }
 
     /**
+     * Alíquota regressiva por **meses civis** de aplicação (contrato selado do
+     * CDB): até 6 meses 22,5%; 7..12 meses 20%; 13..24 meses 17,5%; acima de
+     * 24 meses 15%. O IR incide sobre o ganho (juros), nunca sobre o principal.
+     */
+    fun aliquotaPorMeses(meses: Int): Double = when {
+        meses <= 0 -> 0.0
+        meses <= 6 -> ALIQUOTA_ATE_180
+        meses <= 12 -> ALIQUOTA_181_360
+        meses <= 24 -> ALIQUOTA_361_720
+        else -> ALIQUOTA_ACIMA_720
+    }
+
+    /**
      * IR a pagar sobre o [rendimentoBruto], conforme a alíquota regressiva
      * calculada a partir de [diasCorridos].
      */

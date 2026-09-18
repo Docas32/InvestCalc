@@ -1,8 +1,5 @@
 package br.investcalc.app.data.rates
 
-import br.investcalc.app.domain.rates.CdiMonthlyPoint
-import br.investcalc.app.domain.rates.CdiMonthlySeries
-import br.investcalc.app.domain.rates.RateAnnualizer
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -11,27 +8,22 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.withTimeout
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
-import kotlin.math.pow
 
 /**
- * Implementação da camada de taxas alimentada pelo BCB (SGS, série 12 = CDI
- * mensal acumulado) com a cadeia de prioridade pactuada na UI:
+ * Implementação da camada de taxas alimentada pelo BCB (SGS, série **4389** =
+ * CDI já anualizado em % a.a.) com a cadeia de prioridade pactuada na UI:
  *
  * 1. **Cache DataStore (TTL 12h)** — nunca bloqueia o cold start;
- * 2. **API BCB** (últimos 13 pontos → últimos 12 anualizados pelo
- *    [RateAnnualizer]);
- * 3. **Remote Config** (`default_cdi_aa`, `default_selic_aa`,
- *    `default_ipca_aa`) com defaults no XML;
- * 4. **Fallback embutido** ([RatesFallback]: {cdi=12.6825, selic=12.6825? não —
- *    fallback hermético}).
+ * 2. **API BCB** (último ponto da série 4389, lido direto como % a.a.);
+ * 3. **Fallback embutido** ([RatesFallback]: {cdi=10.90, selic=11.25,
+ *    ipca=4.50}) quando não há rede, cache ou resposta válida.
  *
  * Contrato **nunca lança** e **nunca bloqueia a UI**: toda falha de rede,
  * timeout ou rate-limit do BCB degrada silenciosamente para o cache ou para
- * o [RatesFallback] — a badge "atualizada em dd/mm" usa [RatesFallback.atualizadaEm].
+ * o [RatesFallback] — a badge "atualizada em dd/mm" usa a data do ponto.
  *
  * Timeout de 5s + retry único (2 tentativas) são garantidos aqui, sem jamais
- * interromper a renderização (chamada é `suspend`, CPU-bound via anualização
- * pura JVM em [RateAnnualizer]).
+ * interromper a renderização.
  */
 class BcbRatesRepository(
     private val api: BcbApi,
@@ -39,6 +31,7 @@ class BcbRatesRepository(
     private val quantidadeBcb: Int = 13,
     private val ttlHoras: Long = 12L,
     private val timeoutSegundos: Long = 5L,
+    private val cache: TaxaCache? = null,
 ) : RatesRepository {
 
     private val mutableState = MutableStateFlow(fallback.snapshot())
@@ -53,19 +46,28 @@ class BcbRatesRepository(
 
     /** Sem bloqueio de UI: retorna sempre um snapshot (cache → BCB → fallback). */
     override suspend fun taxaCdiAnual(): RatesSnapshot {
-        val cache = mutableState.value
-        if (cacheDeveServir(cache)) return cache
+        // 1º: cache persistido (DataStore) com TTL 12h
+        val persistido = cache?.carregar()
+        if (persistido != null && cacheDeveServir(persistido)) {
+            mutableState.value = persistido
+            return persistido
+        }
 
+        // 2º: valor desta sessão já reconciliado
+        if (cacheDeveServir(mutableState.value)) return mutableState.value
+
+        // 3º: API do BCB (timeout 5s + retry único); falha degrada p/ fallback
         return try {
             val doBcb = withTimeout(timeoutSegundos * 1_000) {
                 retryUnico { buscarDoBcb() }
             }
+            cache?.salvar(doBcb)
             mutableState.value = doBcb
             doBcb
         } catch (_: TimeoutCancellationException) {
-            cache
+            mutableState.value
         } catch (_: Exception) {
-            cache
+            mutableState.value
         }
     }
 
@@ -93,24 +95,20 @@ class BcbRatesRepository(
     }
 
     private suspend fun buscarDoBcb(): RatesSnapshot {
-        val pontosRaw = api.obterSerie(SERIE_CDI_MENSAL, quantidadeBcb)
-        if (pontosRaw.size < 12) return fallback.snapshot()
+        val pontosRaw = api.obterSerie(SERIE_CDI_ANUAL, quantidadeBcb)
+        val maisRecente = pontosRaw.maxByOrNull { parsesData(it.data) }
+            ?: return fallback.snapshot()
 
-        val serie = CdiMonthlySeries(
-            pontos = pontosRaw.takeLast(12).map { p ->
-                CdiMonthlyPoint(
-                    data = parsesData(p.data),
-                    taxaPercentualMensal = p.valor.parseBrasileiroPercentual(),
-                )
-            },
-        )
-        val cdiAnual = RateAnnualizer.annualizarCdi(serie)
+        // SGS 4389 = CDI já anualizado em % a.a. (ex.: "13.90"), lido direto.
+        val cdiAnual = maisRecente.valor.parseDecimalPercentual()
+        if (cdiAnual <= 0.0) return fallback.snapshot()
+
         val base = fallback.snapshot()
         return RatesSnapshot(
             taxaCdiAnualPercentual = cdiAnual,
             taxaSelicAnualPercentual = base.taxaSelicAnualPercentual,
             variacaoIpca12MesesPercentual = base.variacaoIpca12MesesPercentual,
-            atualizadaEm = serie.atualizadaEm,
+            atualizadaEm = parsesData(maisRecente.data),
         )
     }
 
@@ -123,11 +121,19 @@ class BcbRatesRepository(
     }
 }
 
-/** "1,14" (BCB) → 1.14. Formato brasileiro com vírgula decimal. */
-private fun String.parseBrasileiroPercentual(): Double =
-    replace(".", "")
-        .replace(",", ".")
-        .trim()
-        .toDoubleOrNull() ?: 0.0
+/**
+ * Normaliza o decimal do BCB para `Double`. O `formato=json` pode vir com
+ * ponto (`"13.90"`) ou vírgula (`"13,90"`); quando há ambos, o ponto é
+ * separador de milhar e a vírgula é decimal.
+ */
+private fun String.parseDecimalPercentual(): Double {
+    val texto = trim()
+    val normalizado = when {
+        texto.contains(',') && texto.contains('.') -> texto.replace(".", "").replace(',', '.')
+        texto.contains(',') -> texto.replace(',', '.')
+        else -> texto
+    }
+    return normalizado.toDoubleOrNull() ?: 0.0
+}
 
-internal const val SERIE_CDI_MENSAL = 12
+internal const val SERIE_CDI_ANUAL = 4389

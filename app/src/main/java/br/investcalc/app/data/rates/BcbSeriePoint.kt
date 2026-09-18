@@ -9,9 +9,9 @@ package br.investcalc.app.data.rates
  * [{"data":"02/01/2026","valor":"0.68"},{"data":"03/01/2026","valor":"0.68"}]
  * ```
  *
- * `data` vem em `dd/mm/aaaa` e `valor` em texto com VÍRGULA decimal.
- * O consumo anualiza os últimos 12 pontos da série CDI (12) para chegar à
- * taxa anual efetiva — tabelado no [BcbSeriesAnnualizer].
+ * `data` vem em `dd/mm/aaaa` e `valor` em texto com PONTO ou vírgula decimal
+ * (normalizado por [BcbRatesRepository]). A calculadora lê a série 4389
+ * (CDI anualizado em % a.a.) diretamente, sem anualizar.
  */
 data class BcbSeriePoint(
     val data: String,

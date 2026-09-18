@@ -50,6 +50,32 @@ object CdbCalculator {
     }
 
     /**
+     * Calcula a evolução de um CDB a partir da **taxa DI anual em percentual**
+     * (ex.: 10,90 = 10,90% a.a.) e do percentual do CDI (ex.: 100.0).
+     *
+     * É o caminho da tela Calculadora CDI/CDB: o campo "Taxa DI (% a.a.)" é
+     * preenchido pelo BCB/fallback e o percentual vem dos chips; a taxa mensal
+     * efetiva é `i = (1 + (DI * pct/100) / 100)^(1/12) - 1`. O IR usa a tabela
+     * regressiva **por meses** (22,5/20/17,5/15%) sobre o ganho.
+     */
+    fun calcularComTaxaDiAnualPercentual(
+        valorInicial: MonetaryValue,
+        aporteMensal: MonetaryValue,
+        percentualCdi: Double,
+        taxaDiAnualPercentual: Double,
+        meses: Int,
+    ): InvestmentResult {
+        val taxaEfetivaAnual = taxaDiAnualPercentual * (percentualCdi / 100.0) / 100.0
+        val taxaMensal = RateConverter.anualParaMensal(taxaEfetivaAnual)
+        return calcularComTaxaMensal(
+            valorInicial = valorInicial,
+            aporteMensal = aporteMensal,
+            taxaMensalEfetiva = taxaMensal,
+            meses = meses,
+        )
+    }
+
+    /**
      * Calcula a evolução de um CDB com taxa mensal efetiva já convertida.
      */
     fun calcularComTaxaMensal(
@@ -69,7 +95,7 @@ object CdbCalculator {
         )
         val rendimentoBruto = valorBruto.minus(totalInvestido)
         val dias = diasCorridos ?: (meses.toDouble() * 30.44).roundToInt()
-        val aliquota = aliquotaIrExplícita ?: IncomeTax.aliquotaPorDias(dias)
+        val aliquota = aliquotaIrExplícita ?: IncomeTax.aliquotaPorMeses(meses)
         val ir = IncomeTax.calcularIrSobreAliquota(rendimentoBruto, aliquota)
         val valorLiquido = valorBruto.minus(ir)
         return InvestmentResult(
