@@ -14,7 +14,7 @@
 
     <string name="campo_valor_inicial">Valor inicial (R$)</string>
     <string name="campo_aporte_mensal">Aporte mensal (R$)</string>
-    <string name="campo_meses">Meses (1..9999)</string>
+    <string name="campo_meses">Prazo (meses)</string>
     <string name="campo_percentual_cdi" formatted="false">Percentual do CDI (%)</string>
     <string name="campo_placeholder_moeda">R$ 0,00</string>
     <string name="campo_taxa_di" formatted="false">Taxa DI (% a.a.)</string>

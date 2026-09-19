@@ -1,7 +1,6 @@
 package br.investcalc.app.ui.input
 
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -20,7 +19,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -64,19 +63,18 @@ private const val PERCENTUAL_CDI_MAX = 1000.0
 fun SimulacaoScreen(
     onSeriePronta: (PatrimonioSeries) -> Unit,
     onResultadoPronto: (InvestmentResult) -> Unit,
-    onVoltar: () -> Unit,
     taxaDiAnualAutomatica: Double,
     taxaDiOrigemLabel: String,
 ) {
-    var valorInicialTexto by remember { mutableStateOf("100000") }
-    var aporteMensalTexto by remember { mutableStateOf("20000") }
-    var mesesTexto by remember { mutableStateOf("12") }
-    var percentualCdiTexto by remember { mutableStateOf("100") }
-    var taxaDiTexto by remember { mutableStateOf(taxaDiAnualAutomatica.formatarTaxaUi()) }
-    var taxaDiEditadaManualmente by remember { mutableStateOf(false) }
-    var taxaMensalManualTexto by remember { mutableStateOf("") }
-    var modoAvancado by remember { mutableStateOf(false) }
-    var aviso by remember { mutableStateOf<String?>(null) }
+    var valorInicialTexto by rememberSaveable { mutableStateOf("100000") }
+    var aporteMensalTexto by rememberSaveable { mutableStateOf("20000") }
+    var mesesTexto by rememberSaveable { mutableStateOf("12") }
+    var percentualCdiTexto by rememberSaveable { mutableStateOf("100") }
+    var taxaDiTexto by rememberSaveable { mutableStateOf(taxaDiAnualAutomatica.formatarTaxaUi()) }
+    var taxaDiEditadaManualmente by rememberSaveable { mutableStateOf(false) }
+    var taxaMensalManualTexto by rememberSaveable { mutableStateOf("") }
+    var modoAvancado by rememberSaveable { mutableStateOf(false) }
+    var aviso by rememberSaveable { mutableStateOf<String?>(null) }
 
     val rotuloValorInicial = stringResource(R.string.campo_valor_inicial)
     val rotuloAporteMensal = stringResource(R.string.campo_aporte_mensal)
@@ -91,7 +89,6 @@ fun SimulacaoScreen(
     val rotuloOcultarAvancado = stringResource(R.string.ocultar_modo_avancado)
     val rotuloModoAvancado = stringResource(R.string.modo_avancado)
     val rotuloSimular = stringResource(R.string.simular)
-    val rotuloVoltar = stringResource(R.string.voltar)
 
     // P3: a taxa do BCB chega de forma assíncrona; quando ela muda, atualiza o
     // campo — a menos que o usuário já o tenha editado à mão.
@@ -240,59 +237,53 @@ fun SimulacaoScreen(
         }
         Spacer(Modifier.height(16.dp))
 
-        Row(modifier = Modifier.fillMaxWidth()) {
-            Button(
-                onClick = {
-                    val valorInicial = CurrencyInputMask.toReais(valorInicialTexto)
-                    val aporteMensal = CurrencyInputMask.toReais(aporteMensalTexto)
-                    val usarManual = modoAvancado && taxaMensalManual > 0.0
-                    when {
-                        !percentualValido ->
-                            aviso = msgErroPctCdi
-                        modoAvancado && taxaMensalManual <= 0.0 ->
-                            aviso = msgErroTaxaMensalManual
-                        taxaMensalUsada <= 0.0 ->
-                            aviso = msgErroTaxaDi
-                        valorInicial <= 0.0 && aporteMensal <= 0.0 ->
-                            aviso = msgErroValorAporte
-                        else -> {
-                            aviso = null
-                            val serie = PatrimonioSeriesBuilder.construir(
-                                valorInicial = valorInicial,
-                                aporteMensal = aporteMensal,
+        Button(
+            onClick = {
+                val valorInicial = CurrencyInputMask.toReais(valorInicialTexto)
+                val aporteMensal = CurrencyInputMask.toReais(aporteMensalTexto)
+                val usarManual = modoAvancado && taxaMensalManual > 0.0
+                when {
+                    !percentualValido ->
+                        aviso = msgErroPctCdi
+                    modoAvancado && taxaMensalManual <= 0.0 ->
+                        aviso = msgErroTaxaMensalManual
+                    taxaMensalUsada <= 0.0 ->
+                        aviso = msgErroTaxaDi
+                    valorInicial <= 0.0 && aporteMensal <= 0.0 ->
+                        aviso = msgErroValorAporte
+                    else -> {
+                        aviso = null
+                        val serie = PatrimonioSeriesBuilder.construir(
+                            valorInicial = valorInicial,
+                            aporteMensal = aporteMensal,
+                            meses = meses,
+                            taxaMensalPercentual = taxaMensalUsada,
+                        )
+                        val resultado = if (usarManual) {
+                            CdbCalculator.calcularComTaxaMensal(
+                                valorInicial = MonetaryValue.ofReais(valorInicial),
+                                aporteMensal = MonetaryValue.ofReais(aporteMensal),
+                                taxaMensalEfetiva = taxaMensalManual / 100.0,
                                 meses = meses,
-                                taxaMensalPercentual = taxaMensalUsada,
                             )
-                            val resultado = if (usarManual) {
-                                CdbCalculator.calcularComTaxaMensal(
-                                    valorInicial = MonetaryValue.ofReais(valorInicial),
-                                    aporteMensal = MonetaryValue.ofReais(aporteMensal),
-                                    taxaMensalEfetiva = taxaMensalManual / 100.0,
-                                    meses = meses,
-                                )
-                            } else {
-                                // pct vem do MESMO texto do campo no instante do clique.
-                                CdbCalculator.calcularComTaxaDiAnualPercentual(
-                                    valorInicial = MonetaryValue.ofReais(valorInicial),
-                                    aporteMensal = MonetaryValue.ofReais(aporteMensal),
-                                    percentualCdi = percentualCdi ?: 0.0,
-                                    taxaDiAnualPercentual = taxaDi,
-                                    meses = meses,
-                                )
-                            }
-                            onSeriePronta(serie)
-                            onResultadoPronto(resultado)
+                        } else {
+                            // pct vem do MESMO texto do campo no instante do clique.
+                            CdbCalculator.calcularComTaxaDiAnualPercentual(
+                                valorInicial = MonetaryValue.ofReais(valorInicial),
+                                aporteMensal = MonetaryValue.ofReais(aporteMensal),
+                                percentualCdi = percentualCdi ?: 0.0,
+                                taxaDiAnualPercentual = taxaDi,
+                                meses = meses,
+                            )
                         }
+                        onSeriePronta(serie)
+                        onResultadoPronto(resultado)
                     }
-                },
-                modifier = Modifier.weight(1f),
-            ) {
-                Text(rotuloSimular)
-            }
-            Spacer(Modifier.height(0.dp).weight(0.2f))
-            TextButton(onClick = onVoltar) {
-                Text(rotuloVoltar)
-            }
+                }
+            },
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Text(rotuloSimular)
         }
 
         aviso?.let {

@@ -20,6 +20,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -159,25 +160,27 @@ private fun AbaCalculadora(taxaSnapshot: RatesSnapshot, origemLabel: String) {
         serie?.let { EvolutionChartBuilder.dePatrimonio(it) }
     }
 
-    if (serie == null) {
-        SimulacaoScreen(
-            onSeriePronta = { serie = it },
-            onResultadoPronto = { resultado = it },
-            onVoltar = {},
-            taxaDiAnualAutomatica = taxaDiAutomatica,
-            taxaDiOrigemLabel = origemLabel,
-        )
-    } else {
-        Column(modifier = Modifier.fillMaxSize()) {
-            TextButton(onClick = { serie = null; resultado = null }) {
-                Text(stringResource(R.string.voltar))
-            }
-            resultado?.let { ResumoResultado(it) }
-            EvolutionChartScreen(
-                series = chart,
-                onTooltipUsed = {},
-                onTableOpened = {},
+    val estadoFormulario = rememberSaveableStateHolder()
+    estadoFormulario.SaveableStateProvider(ROTA_CALCULADORA) {
+        if (serie == null) {
+            SimulacaoScreen(
+                onSeriePronta = { serie = it },
+                onResultadoPronto = { resultado = it },
+                taxaDiAnualAutomatica = taxaDiAutomatica,
+                taxaDiOrigemLabel = origemLabel,
             )
+        } else {
+            Column(modifier = Modifier.fillMaxSize()) {
+                TextButton(onClick = { serie = null; resultado = null }) {
+                    Text(stringResource(R.string.voltar))
+                }
+                resultado?.let { ResumoResultado(it) }
+                EvolutionChartScreen(
+                    series = chart,
+                    onTooltipUsed = {},
+                    onTableOpened = {},
+                )
+            }
         }
     }
 }

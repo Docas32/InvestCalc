@@ -3,6 +3,7 @@ package br.investcalc.app
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import br.investcalc.app.ui.navigation.AppNavHost
 import br.investcalc.app.ui.theme.InvestCalcTheme
 
@@ -18,6 +19,7 @@ import br.investcalc.app.ui.theme.InvestCalcTheme
  */
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
+        installSplashScreen()
         super.onCreate(savedInstanceState)
         setContent {
             InvestCalcTheme {

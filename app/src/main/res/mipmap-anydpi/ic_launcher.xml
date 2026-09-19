@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Ícone legado (pré-26): fundo índigo + glifo de gráfico ascendente. -->
+    <path
+        android:fillColor="#5C6BC0"
+        android:pathData="M0,0 h108 v108 h-108 z" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M34,60 h8 v18 h-8 z" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M50,46 h8 v32 h-8 z" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M66,32 h8 v46 h-8 z" />
+    <path
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="5"
+        android:strokeLineCap="round"
+        android:pathData="M73,33 L83,22" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M83,22 L76,28 L80,29 z" />
+</vector>
