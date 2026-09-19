@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
@@ -25,6 +26,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import br.investcalc.app.R
 import br.investcalc.app.data.rates.RatesFallback
@@ -39,6 +42,7 @@ import br.investcalc.app.domain.chart.PatrimonioSeriesBuilder
 import br.investcalc.app.domain.model.InvestmentResult
 import br.investcalc.app.domain.model.MonetaryValue
 import br.investcalc.app.ui.chart.EvolutionChartScreen
+import br.investcalc.app.ui.input.CampoMonetario
 import br.investcalc.app.ui.input.formatarTaxaUi
 import br.investcalc.app.ui.input.parseDecimalBr
 import br.investcalc.app.core.format.CurrencyInputMask
@@ -238,21 +242,19 @@ private fun Formulario(
         }
         Spacer(Modifier.height(12.dp))
 
-        OutlinedTextField(
-            value = CurrencyInputMask.apply(valorInicialTexto),
-            onValueChange = { onValorInicialMudou(CurrencyInputMask.digitsOf(it)) },
-            label = { Text(stringResource(R.string.campo_valor_inicial)) },
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth(),
+        CampoMonetario(
+            rotulo = stringResource(R.string.campo_valor_inicial),
+            valorInicial = valorInicialTexto,
+            onValorMudou = onValorInicialMudou,
+            imeAction = ImeAction.Next,
         )
         Spacer(Modifier.height(8.dp))
 
-        OutlinedTextField(
-            value = CurrencyInputMask.apply(aporteMensalTexto),
-            onValueChange = { onAporteMensalMudou(CurrencyInputMask.digitsOf(it)) },
-            label = { Text(stringResource(R.string.campo_aporte_mensal)) },
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth(),
+        CampoMonetario(
+            rotulo = stringResource(R.string.campo_aporte_mensal),
+            valorInicial = aporteMensalTexto,
+            onValorMudou = onAporteMensalMudou,
+            imeAction = ImeAction.Next,
         )
         Spacer(Modifier.height(8.dp))
 
@@ -260,6 +262,10 @@ private fun Formulario(
             value = mesesTexto,
             onValueChange = onMesesMudou,
             label = { Text(stringResource(R.string.campo_meses)) },
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Number,
+                imeAction = ImeAction.Next,
+            ),
             singleLine = true,
             modifier = Modifier.fillMaxWidth(),
         )
@@ -271,6 +277,10 @@ private fun Formulario(
                     value = selicTexto,
                     onValueChange = onSelicMudou,
                     label = { Text(stringResource(R.string.campo_taxa_selic)) },
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Decimal,
+                        imeAction = ImeAction.Done,
+                    ),
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                 )
@@ -285,6 +295,10 @@ private fun Formulario(
                     value = ipcaTexto,
                     onValueChange = onIpcaMudou,
                     label = { Text(stringResource(R.string.campo_ipca)) },
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Decimal,
+                        imeAction = ImeAction.Next,
+                    ),
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                 )
@@ -299,6 +313,10 @@ private fun Formulario(
                     onValueChange = onTaxaRealMudou,
                     label = { Text(stringResource(R.string.campo_taxa_real)) },
                     placeholder = { Text(stringResource(R.string.hint_taxa_real)) },
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Decimal,
+                        imeAction = ImeAction.Done,
+                    ),
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                 )
@@ -308,6 +326,10 @@ private fun Formulario(
                     value = prefixadoTexto,
                     onValueChange = onPrefixadoMudou,
                     label = { Text(stringResource(R.string.campo_taxa_prefixada)) },
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Decimal,
+                        imeAction = ImeAction.Done,
+                    ),
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                 )

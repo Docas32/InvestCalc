@@ -32,6 +32,7 @@ import br.investcalc.app.domain.calculator.ComparadorCalculator
 import br.investcalc.app.domain.calculator.ComparadorResultado
 import br.investcalc.app.domain.model.MonetaryValue
 import br.investcalc.app.ui.chart.formatarMoeda
+import br.investcalc.app.ui.input.CampoMonetario
 import br.investcalc.app.ui.input.TAXA_DI_ANUAL_FALLBACK_PERCENTUAL
 import br.investcalc.app.ui.input.formatarTaxaUi
 import br.investcalc.app.ui.input.parseDecimalBr
@@ -77,31 +78,21 @@ fun ComparadorScreen(
         )
         Spacer(Modifier.height(12.dp))
 
-        OutlinedTextField(
-            value = CurrencyInputMask.apply(valorInicialTexto),
-            onValueChange = { valorInicialTexto = CurrencyInputMask.digitsOf(it) },
-            label = { Text(stringResource(R.string.campo_valor_inicial)) },
-            keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Number,
-                imeAction = ImeAction.Next,
-            ),
-            placeholder = { Text(stringResource(R.string.campo_placeholder_moeda)) },
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth(),
+        CampoMonetario(
+            rotulo = stringResource(R.string.campo_valor_inicial),
+            valorInicial = valorInicialTexto,
+            onValorMudou = { valorInicialTexto = it },
+            imeAction = ImeAction.Next,
+            placeholder = stringResource(R.string.campo_placeholder_moeda),
         )
         Spacer(Modifier.height(8.dp))
 
-        OutlinedTextField(
-            value = CurrencyInputMask.apply(aporteMensalTexto),
-            onValueChange = { aporteMensalTexto = CurrencyInputMask.digitsOf(it) },
-            label = { Text(stringResource(R.string.campo_aporte_mensal)) },
-            keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Number,
-                imeAction = ImeAction.Next,
-            ),
-            placeholder = { Text(stringResource(R.string.campo_placeholder_moeda)) },
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth(),
+        CampoMonetario(
+            rotulo = stringResource(R.string.campo_aporte_mensal),
+            valorInicial = aporteMensalTexto,
+            onValorMudou = { aporteMensalTexto = it },
+            imeAction = ImeAction.Next,
+            placeholder = stringResource(R.string.campo_placeholder_moeda),
         )
         Spacer(Modifier.height(8.dp))
 
@@ -109,6 +100,10 @@ fun ComparadorScreen(
             value = mesesTexto,
             onValueChange = { mesesTexto = it },
             label = { Text(stringResource(R.string.campo_meses)) },
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Number,
+                imeAction = ImeAction.Next,
+            ),
             singleLine = true,
             modifier = Modifier.fillMaxWidth(),
         )
@@ -129,6 +124,10 @@ fun ComparadorScreen(
             value = percentualCdbTexto,
             onValueChange = { percentualCdbTexto = it },
             label = { Text(stringResource(R.string.campo_percentual_cdb)) },
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Decimal,
+                imeAction = ImeAction.Next,
+            ),
             singleLine = true,
             modifier = Modifier.fillMaxWidth(),
         )
@@ -138,6 +137,10 @@ fun ComparadorScreen(
             value = percentualLciTexto,
             onValueChange = { percentualLciTexto = it },
             label = { Text(stringResource(R.string.campo_percentual_lci)) },
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Decimal,
+                imeAction = ImeAction.Done,
+            ),
             singleLine = true,
             modifier = Modifier.fillMaxWidth(),
         )

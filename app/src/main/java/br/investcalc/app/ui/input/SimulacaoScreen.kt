@@ -142,31 +142,21 @@ fun SimulacaoScreen(
         )
         Spacer(Modifier.height(12.dp))
 
-        OutlinedTextField(
-            value = CurrencyInputMask.apply(valorInicialTexto),
-            onValueChange = { valorInicialTexto = CurrencyInputMask.digitsOf(it) },
-            label = { Text(rotuloValorInicial) },
-            keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Number,
-                imeAction = ImeAction.Next,
-            ),
-            placeholder = { Text(stringResource(R.string.campo_placeholder_moeda)) },
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth(),
+        CampoMonetario(
+            rotulo = rotuloValorInicial,
+            valorInicial = valorInicialTexto,
+            onValorMudou = { valorInicialTexto = it },
+            imeAction = ImeAction.Next,
+            placeholder = stringResource(R.string.campo_placeholder_moeda),
         )
         Spacer(Modifier.height(8.dp))
 
-        OutlinedTextField(
-            value = CurrencyInputMask.apply(aporteMensalTexto),
-            onValueChange = { aporteMensalTexto = CurrencyInputMask.digitsOf(it) },
-            label = { Text(rotuloAporteMensal) },
-            keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Number,
-                imeAction = ImeAction.Next,
-            ),
-            placeholder = { Text(stringResource(R.string.campo_placeholder_moeda)) },
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth(),
+        CampoMonetario(
+            rotulo = rotuloAporteMensal,
+            valorInicial = aporteMensalTexto,
+            onValorMudou = { aporteMensalTexto = it },
+            imeAction = ImeAction.Next,
+            placeholder = stringResource(R.string.campo_placeholder_moeda),
         )
         Spacer(Modifier.height(8.dp))
 

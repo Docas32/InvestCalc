@@ -18,6 +18,9 @@ package br.investcalc.app.core.format
  *  - o prefixo `"R$"` é parte da formatação do campo (como o placeholder
  *    "R$ 0,00").
  */
+/** Texto mascarado + posição do cursor devolvidos por [CurrencyInputMask.reaplicar]. */
+data class ResultadoMascara(val texto: String, val posicaoCursor: Int)
+
 object CurrencyInputMask {
 
     const val MAX_DIGITS = 13
@@ -50,6 +53,18 @@ object CurrencyInputMask {
 
     /** Reais (`Double`) correspondentes ao texto da máscara. */
     fun toReais(texto: String): Double = parseToCents(texto) / CENTS_PER_UNIT
+
+    /**
+     * Reaplica a máscara ao texto editado e devolve o resultado com o cursor
+     * **sempre no fim**. É a única função de edição dos campos monetários
+     * (P3.2-FALHA1): qualquer edição — digitar no meio, backspace, colar — é
+     * reduzida a dígitos, reformatada e devolvida já pronta para `TextFieldValue`
+     * com `selection = TextRange(posicaoCursor)`.
+     */
+    fun reaplicar(editado: String): ResultadoMascara {
+        val formatado = apply(editado)
+        return ResultadoMascara(formatado, formatado.length)
+    }
 
     private fun milhar(v: Long): String {
         val s = v.toString()

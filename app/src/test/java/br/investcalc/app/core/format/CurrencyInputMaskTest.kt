@@ -56,6 +56,22 @@ class CurrencyInputMaskTest {
     }
 
     @Test
+    fun `apagar digito do meio de mil reais reformata e trava cursor no fim`() {
+        val editada = "R$ 1.00,00" // apagou um '0' interno de "R$ 1.000,00"
+        val mascara = CurrencyInputMask.reaplicar(editada)
+        assertEquals("R$ 100,00", mascara.texto)
+        assertEquals(mascara.texto.length, mascara.posicaoCursor)
+    }
+
+    @Test
+    fun `digitar no meio do texto mascarado reformata e trava cursor no fim`() {
+        val editada = "R$ 4405,00" // '5' inserido no meio de "R$ 440,00"
+        val mascara = CurrencyInputMask.reaplicar(editada)
+        assertEquals("R$ 4.405,00", mascara.texto)
+        assertEquals(mascara.texto.length, mascara.posicaoCursor)
+    }
+
+    @Test
     fun `limites a 13 digitos`() {
         val quatorze = "1".repeat(14)
         assertEquals(CurrencyInputMask.MAX_DIGITS, CurrencyInputMask.digitsOf(quatorze).length)
