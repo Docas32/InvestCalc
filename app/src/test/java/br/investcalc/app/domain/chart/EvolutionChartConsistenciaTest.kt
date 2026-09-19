@@ -39,7 +39,7 @@ class EvolutionChartConsistenciaTest {
         val aporteMensal = 200.0
         val meses = 12
         val percentualCdi = 110.0
-        val taxaDi = 10.90
+        val taxaDi = 13.90
 
         val serie = PatrimonioSeriesBuilder.construir(
             valorInicial = valorInicial,
@@ -72,7 +72,7 @@ class EvolutionChartConsistenciaTest {
         val aporteMensal = 100.0
         val meses = 999
         val percentualCdi = 100.0
-        val taxaDi = 10.90
+        val taxaDi = 13.90
 
         val serie = PatrimonioSeriesBuilder.construir(
             valorInicial = valorInicial,

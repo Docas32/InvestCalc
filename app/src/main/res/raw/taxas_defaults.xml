@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Valores canônicos de reserva da cadeia de resiliência de taxas (T1-v2).
+<!-- Valores canônicos de reserva da cadeia de resiliência de taxas (T1/P4).
      Último degrau antes do fallback embutido: sem rede, sem cache e sem
-     remote config, a calculadora usa estes percentuais anuais. -->
+     remote config, a calculadora usa estes percentuais anuais (13,90%). -->
 <taxas
-    cdi="10.9"
-    selic="10.9"
+    cdi="13.9"
+    selic="13.9"
     ipca="4.5"
     />

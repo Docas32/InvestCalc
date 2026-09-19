@@ -274,6 +274,9 @@ class BcbResilienciaTaxasTest {
         override fun taxaOrigemUsada(origem: String) {
             origens += origem
         }
+
+        override fun chartTooltipUsed() {}
+        override fun screenViewed(screen: String) {}
     }
 
     private class RcFixo(private val valor: RatesSnapshot?) : RemoteConfigRates {

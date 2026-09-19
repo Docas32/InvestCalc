@@ -8,10 +8,12 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -23,16 +25,25 @@ import androidx.compose.ui.unit.dp
 import br.investcalc.app.R
 
 /**
- * Ajustes hermetica (Material 3, zero rede, zero Firebase, zero crash).
- * Unico toggle: "Anúncios (consentimento)" — sera ligado ao UMP na fase
- * AdMob. O toggle de Notificacoes foi removido (nao havia feature por tras).
+ * Ajustes (Material 3).
+ *
+ * - "Anúncios (consentimento)": reflete o estado atual do UMP; ao alternar,
+ *   [onAlternarConsentimento] reabre o formulário de consentimento — quem
+ *   decide é o próprio usuário no formulário (toggle é o gatilho);
+ * - "Forçar crash (teste)": dispara o teste do Crashlytics (removido no P5).
  */
 @Composable
 fun AjustesScreen(
-    consentimentoAdsAtivo: Boolean,
-    onAlternativeConsentimento: () -> Unit,
+    consentimentoAtivo: Boolean,
+    onAlternarConsentimento: () -> Unit,
+    onForcarCrashTeste: () -> Unit,
 ) {
-    var consentimentoLocal by remember { mutableStateOf(consentimentoAdsAtivo) }
+    var consentimentoLocal by remember { mutableStateOf(consentimentoAtivo) }
+
+    // Sincroniza com o estado real do UMP após o formulário ser respondido.
+    LaunchedEffect(consentimentoAtivo) {
+        consentimentoLocal = consentimentoAtivo
+    }
 
     Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
         Text(
@@ -49,10 +60,22 @@ fun AjustesScreen(
                 stringResource(R.string.anuncios_inativo)
             },
             ligado = consentimentoLocal,
-            onToggle = {
-                consentimentoLocal = !consentimentoLocal
-                onAlternativeConsentimento()
-            },
+            onToggle = onAlternarConsentimento,
+        )
+
+        Spacer(modifier = Modifier.height(24.dp))
+        HorizontalDivider()
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Text(
+            text = stringResource(R.string.ajustes_testes_title),
+            style = MaterialTheme.typography.titleMedium,
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        LinhaTexto(
+            rotulo = stringResource(R.string.forcar_crash),
+            descricao = stringResource(R.string.forcar_crash_desc),
+            onClick = onForcarCrashTeste,
         )
     }
 }
@@ -77,5 +100,25 @@ private fun LinhaToggle(
             Text(text = descricao, style = MaterialTheme.typography.bodySmall)
         }
         Switch(checked = ligado, onCheckedChange = { onToggle() })
+    }
+}
+
+@Composable
+private fun LinhaTexto(
+    rotulo: String,
+    descricao: String,
+    onClick: () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() }
+            .padding(vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(text = rotulo, style = MaterialTheme.typography.bodyLarge)
+            Text(text = descricao, style = MaterialTheme.typography.bodySmall)
+        }
     }
 }

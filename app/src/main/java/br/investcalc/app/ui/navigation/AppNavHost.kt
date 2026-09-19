@@ -1,7 +1,9 @@
 package br.investcalc.app.ui.navigation
 
+import android.app.Activity
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.CompareArrows
@@ -20,6 +22,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -32,16 +35,23 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import br.investcalc.app.R
-import br.investcalc.app.data.analytics.AndroidLogAnalyticsRepository
+import br.investcalc.app.data.ads.DataStoreSimulacaoCounter
+import br.investcalc.app.data.ads.IntersticialCarregador
+import br.investcalc.app.data.ads.UmConsent
+import br.investcalc.app.data.analytics.FirebaseAnalyticsRepository
 import br.investcalc.app.data.rates.BcbApiFactory
 import br.investcalc.app.data.rates.BcbRatesRepository
 import br.investcalc.app.data.rates.DataStoreTaxaCache
 import br.investcalc.app.data.rates.RatesSnapshot
 import br.investcalc.app.data.rates.RawXmlDefaultsRates
+import br.investcalc.app.data.remotecfg.AppSettings
+import br.investcalc.app.data.remotecfg.FirebaseRemoteConfigAds
 import br.investcalc.app.data.remotecfg.FirebaseRemoteConfigRates
+import br.investcalc.app.domain.ads.InterstitialGate
 import br.investcalc.app.domain.chart.EvolutionChartBuilder
 import br.investcalc.app.domain.chart.PatrimonioSeries
 import br.investcalc.app.domain.model.InvestmentResult
+import br.investcalc.app.ui.ads.BannerRodape
 import br.investcalc.app.ui.chart.EvolutionChartScreen
 import br.investcalc.app.ui.compare.ComparadorScreen
 import br.investcalc.app.ui.input.SimulacaoScreen
@@ -49,6 +59,7 @@ import br.investcalc.app.ui.input.TAXA_DI_ANUAL_FALLBACK_PERCENTUAL
 import br.investcalc.app.ui.result.ResumoResultado
 import br.investcalc.app.ui.settings.AjustesScreen
 import br.investcalc.app.ui.tesouro.TesouroScreen
+import kotlinx.coroutines.launch
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
@@ -57,13 +68,25 @@ private const val ROTA_TESOURO = "tesouro"
 private const val ROTA_COMPARAR = "comparar"
 private const val ROTA_AJUSTES = "ajustes"
 
+/** Abas de cálculo que exibem o banner adaptativo no rodapé (T2/P4). */
+private val rotasComBanner = setOf(ROTA_CALCULADORA, ROTA_TESOURO, ROTA_COMPARAR)
+
 /**
- * Navegação principal do InvestCalc (Material 3, sem redes fora do BCB).
+ * Navegação principal do InvestCalc (Material 3).
  *
- * Bottom nav com 4 abas (Calculadora, Tesouro Direto, Comparar, Ajustes).
- * Uma única camada de taxas ([BcbRatesRepository]) é compartilhada pelas três
- * abas de cálculo — nada de infra paralela: refresh em segundo plano no cold
- * start e badge "BCB · dd/mm" / "fallback" derivadas do mesmo snapshot.
+ * Bottom nav com 4 abas (Calculadora, Tesouro Direto, Comparar, Ajustes),
+ * camada de taxas compartilhada ([BcbRatesRepository]) e a pasta de
+ * monetização/fidelidade (T2/P4), tudo fio-a-fio aqui (sem Hilt):
+ *
+ *  - Analytics (Firebase): `calculation_performed`, `rates_origin`,
+ *    `chart_tooltip_used` e `screen_view` nas 4 abas;
+ *  - Remote Config de ads (`ads_enabled`, `interstitial_frequency`) buscado
+ *    no cold start;
+ *  - UMP ([UmConsent]): formulário na primeira abertura e reaberto pelo toggle
+ *    de Ajustes; sem consentimento não há banner nem intersticial;
+ *  - banner adaptativo no rodapé das 3 abas de cálculo;
+ *  - intersticial após `interstitial_frequency` cálculos (nunca o 1º, nunca em
+ *    sequência), pré-carregado quando consentido e recarregado ao fechar.
  */
 @Composable
 fun AppNavHost(modifier: Modifier = Modifier) {
@@ -72,19 +95,67 @@ fun AppNavHost(modifier: Modifier = Modifier) {
     val rotaAtual = backStack?.destination?.route
 
     val contexto = LocalContext.current
+    val scope = rememberCoroutineScope()
+
+    val analyticsRepository = remember { FirebaseAnalyticsRepository(contexto) }
     val repositorioTaxas = remember {
         BcbRatesRepository(
             api = BcbApiFactory.criar(),
             cache = DataStoreTaxaCache(contexto),
             remoteConfig = FirebaseRemoteConfigRates(),
             xmlDefaults = RawXmlDefaultsRates(contexto),
-            analyticsRepository = AndroidLogAnalyticsRepository(),
+            analyticsRepository = analyticsRepository,
         )
     }
+    val remoteConfigAds = remember { FirebaseRemoteConfigAds() }
+    val consentimento = remember { UmConsent(contexto) }
+    val simulacaoCounter = remember { DataStoreSimulacaoCounter(contexto) }
+    val intersticial = remember { IntersticialCarregador(contexto) }
 
+    var appSettings by remember { mutableStateOf(AppSettings()) }
+    val consentimentoAdsLiberado by consentimento.adsLiberados.collectAsState(
+        initial = consentimento.adsLiberados.value,
+    )
+    var intersticialNoCalculoAnterior by remember { mutableStateOf(false) }
+
+    // Cold start: taxas + RC de ads + consentimento UMP (formulário na 1ª abertura).
     LaunchedEffect(Unit) {
         repositorioTaxas.atualizar()
+        appSettings = remoteConfigAds.carregar()
+        (contexto as? Activity)?.let { consentimento.inicializar(it) }
     }
+    LaunchedEffect(rotaAtual) {
+        if (rotaAtual != null) analyticsRepository.screenViewed(rotaAtual)
+    }
+
+    // Pré-carrega o intersticial assim que houver consentimento + ads ativos.
+    LaunchedEffect(appSettings.adsEnabled, consentimentoAdsLiberado) {
+        if (appSettings.adsEnabled && consentimentoAdsLiberado) {
+            intersticial.carregar()
+        }
+    }
+
+    val adsHabilitado = appSettings.adsEnabled && consentimentoAdsLiberado
+
+    val registrarSimulacao: (String, Int, Boolean) -> Unit = { tipo, meses, temAporte ->
+        analyticsRepository.calculationPerformed(tipo, meses, temAporte)
+        scope.launch {
+            val total = simulacaoCounter.incrementar()
+            val exibir = InterstitialGate.deveExibir(
+                adsHabilitado = adsHabilitado,
+                frequencia = appSettings.interstitialFrequency,
+                calculosJaInvocados = total,
+                intersticialExibidoNoCalculoAnterior = intersticialNoCalculoAnterior,
+            )
+            intersticialNoCalculoAnterior = if (exibir) {
+                val atividade = contexto as? Activity
+                atividade != null && intersticial.exibirEm(atividade)
+            } else {
+                false
+            }
+        }
+    }
+
     val taxaSnapshot by repositorioTaxas.state.collectAsState()
     val origemLabel = rotuloOrigemTaxa(taxaSnapshot)
 
@@ -119,19 +190,49 @@ fun AppNavHost(modifier: Modifier = Modifier) {
             }
         },
     ) { innerPadding ->
-        NavHost(
-            navController = navController,
-            startDestination = ROTA_CALCULADORA,
-            modifier = Modifier.fillMaxSize().padding(innerPadding),
-        ) {
-            composable(ROTA_CALCULADORA) { AbaCalculadora(taxaSnapshot, origemLabel) }
-            composable(ROTA_TESOURO) { TesouroScreen(taxaSnapshot, origemLabel) }
-            composable(ROTA_COMPARAR) { ComparadorScreen(taxaSnapshot, origemLabel) }
-            composable(ROTA_AJUSTES) {
-                AjustesScreen(
-                    consentimentoAdsAtivo = false,
-                    onAlternativeConsentimento = {},
-                )
+        Column(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
+            NavHost(
+                navController = navController,
+                startDestination = ROTA_CALCULADORA,
+                modifier = Modifier.fillMaxWidth().weight(1f),
+            ) {
+                composable(ROTA_CALCULADORA) {
+                    AbaCalculadora(
+                        taxaSnapshot = taxaSnapshot,
+                        origemLabel = origemLabel,
+                        onSimulacaoRealizada = registrarSimulacao,
+                        onTooltipUsado = { analyticsRepository.chartTooltipUsed() },
+                    )
+                }
+                composable(ROTA_TESOURO) {
+                    TesouroScreen(
+                        taxas = taxaSnapshot,
+                        taxaOrigemLabel = origemLabel,
+                        onSimulacaoRealizada = registrarSimulacao,
+                        onTooltipUsado = { analyticsRepository.chartTooltipUsed() },
+                    )
+                }
+                composable(ROTA_COMPARAR) {
+                    ComparadorScreen(
+                        taxas = taxaSnapshot,
+                        taxaOrigemLabel = origemLabel,
+                        onSimulacaoRealizada = registrarSimulacao,
+                    )
+                }
+                composable(ROTA_AJUSTES) {
+                    AjustesScreen(
+                        consentimentoAtivo = consentimentoAdsLiberado,
+                        onAlternarConsentimento = {
+                            (contexto as? Activity)?.let { consentimento.abrirFormulario(it) }
+                        },
+                        onForcarCrashTeste = {
+                            throw RuntimeException("Crash forçado (teste) — P4/Crashlytics")
+                        },
+                    )
+                }
+            }
+            if (rotaAtual in rotasComBanner) {
+                BannerRodape(adsHabilitado = adsHabilitado)
             }
         }
     }
@@ -146,7 +247,12 @@ private fun androidx.navigation.NavHostController.navigarPara(rota: String) {
 }
 
 @Composable
-private fun AbaCalculadora(taxaSnapshot: RatesSnapshot, origemLabel: String) {
+private fun AbaCalculadora(
+    taxaSnapshot: RatesSnapshot,
+    origemLabel: String,
+    onSimulacaoRealizada: (String, Int, Boolean) -> Unit,
+    onTooltipUsado: () -> Unit,
+) {
     var serie by remember { mutableStateOf<PatrimonioSeries?>(null) }
     var resultado by remember { mutableStateOf<InvestmentResult?>(null) }
 
@@ -168,6 +274,7 @@ private fun AbaCalculadora(taxaSnapshot: RatesSnapshot, origemLabel: String) {
                 onResultadoPronto = { resultado = it },
                 taxaDiAnualAutomatica = taxaDiAutomatica,
                 taxaDiOrigemLabel = origemLabel,
+                onSimulacaoRealizada = onSimulacaoRealizada,
             )
         } else {
             Column(modifier = Modifier.fillMaxSize()) {
@@ -177,8 +284,7 @@ private fun AbaCalculadora(taxaSnapshot: RatesSnapshot, origemLabel: String) {
                 resultado?.let { ResumoResultado(it) }
                 EvolutionChartScreen(
                     series = chart,
-                    onTooltipUsed = {},
-                    onTableOpened = {},
+                    onTooltipUsed = onTooltipUsado,
                 )
             }
         }

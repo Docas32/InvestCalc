@@ -7,9 +7,9 @@ import org.junit.Test
 /**
  * Regressão obrigatória P4 do CDB com IR regressivo e taxa DI em percentual.
  *
- * - Caso P4.1: DI 10,90% a.a., 100% do CDI, 1.000,00 sem aporte, 12 meses →
- *   bruto 1.109,00; ganho 109,00; IR 20% = 21,80; líquido 1.087,20
- *   (tolerância 0,02).
+ * - Caso P4.1: DI 13,90% a.a., 100% do CDI, 1.000,00 sem aporte, 12 meses →
+ *   bruto 1.139,00; ganho 139,00; IR 20% = 27,80; líquido 1.111,20
+ *   (tolerância 0,02). Fallback do app é 13,90 — nenhum 10,90 remanescente.
  * - Brackets P4.2: 6m → 22,5%; 12m → 20%; 24m → 17,5%; 25m → 15% sobre ganho.
  */
 class CdbComTaxaDiPercentualTest {
@@ -19,20 +19,20 @@ class CdbComTaxaDiPercentualTest {
     private val zero = MonetaryValue.ZERO
 
     @Test
-    fun `P4 1 DI 10 90 pct 100 1000 sem aporte 12 meses`() {
+    fun `P4 1 DI 13 90 pct 100 1000 sem aporte 12 meses`() {
         val r = CdbCalculator.calcularComTaxaDiAnualPercentual(
             valorInicial = inicial,
             aporteMensal = zero,
             percentualCdi = 100.0,
-            taxaDiAnualPercentual = 10.90,
+            taxaDiAnualPercentual = 13.90,
             meses = 12,
         )
-        assertEquals(1_109.00, r.valorBruto.reais(), TOL)
+        assertEquals(1_139.00, r.valorBruto.reais(), TOL)
         assertEquals(1_000.00, r.valorInvestido.reais(), TOL)
-        assertEquals(109.00, r.rendimentoBruto.reais(), TOL)
+        assertEquals(139.00, r.rendimentoBruto.reais(), TOL)
         assertEquals(0.20, r.aliquotaIr, 1e-9)
-        assertEquals(21.80, r.irPago.reais(), TOL)
-        assertEquals(1_087.20, r.valorLiquido.reais(), TOL)
+        assertEquals(27.80, r.irPago.reais(), TOL)
+        assertEquals(1_111.20, r.valorLiquido.reais(), TOL)
     }
 
     @Test
@@ -58,7 +58,7 @@ class CdbComTaxaDiPercentualTest {
             valorInicial = inicial,
             aporteMensal = zero,
             percentualCdi = 100.0,
-            taxaDiAnualPercentual = 10.90,
+            taxaDiAnualPercentual = 13.90,
             meses = 12,
         )
         // IR <= 30% do ganho e nunca toca o principal investido

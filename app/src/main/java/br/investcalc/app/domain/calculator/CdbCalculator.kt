@@ -51,7 +51,7 @@ object CdbCalculator {
 
     /**
      * Calcula a evolução de um CDB a partir da **taxa DI anual em percentual**
-     * (ex.: 10,90 = 10,90% a.a.) e do percentual do CDI (ex.: 100.0).
+     * (ex.: 13,90 = 13,90% a.a.) e do percentual do CDI (ex.: 100.0).
      *
      * É o caminho da tela Calculadora CDI/CDB: o campo "Taxa DI (% a.a.)" é
      * preenchido pelo BCB/fallback e o percentual vem dos chips; a taxa mensal

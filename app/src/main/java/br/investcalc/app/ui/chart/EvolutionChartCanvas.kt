@@ -25,6 +25,7 @@ import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.dp
 import br.investcalc.app.R
+import br.investcalc.app.core.format.CurrencyFormat
 import br.investcalc.app.domain.chart.EvolutionChartPoint
 import br.investcalc.app.domain.chart.EvolutionChartSeries
 import java.time.format.DateTimeFormatter
@@ -35,9 +36,12 @@ import kotlin.math.roundToInt
 private val formatoMes: DateTimeFormatter =
     DateTimeFormatter.ofPattern("MM/yyyy", Locale.ROOT)
 
-/** Formata reais com separador de milhar: "R$ 1.234,56" (deterministico). */
+/**
+ * Formata reais seguindo o locale atual com prefixo fixo "R$ " (T0/P4):
+ * pt-BR "R$ 1.234,56", en "R$ 1,234.56".
+ */
 internal fun formatarMoeda(v: Double): String =
-    "R$ " + String.format(Locale.ROOT, "%,.2f", v)
+    CurrencyFormat.formatReais(v)
 
 /** Rendimento dos juros do mês `idx` (delta dos juros acumulados). */
 internal fun rendimentoNoMes(pontos: List<EvolutionChartPoint>, idx: Int): Double =

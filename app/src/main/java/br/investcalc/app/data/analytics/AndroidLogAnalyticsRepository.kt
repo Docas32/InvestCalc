@@ -4,9 +4,9 @@ import android.util.Log
 
 /**
  * Implementação de [AnalyticsRepository] que registra o evento via log do
- * Android. Em produção o mesmo contrato se conecta ao Firebase Analytics;
- * o uso por trás da interface garante que a camada de UI/domínio permanece
- * testável em JVM puro.
+ * Android — usada como apoio de depuração e para manter a camada de
+ * UI/domínio testável. Em produção o contrato é servido por
+ * [FirebaseAnalyticsRepository].
  */
 class AndroidLogAnalyticsRepository(private val tag: String = "InvestCalc-Analytics") :
     AnalyticsRepository {
@@ -25,6 +25,14 @@ class AndroidLogAnalyticsRepository(private val tag: String = "InvestCalc-Analyt
     }
 
     override fun taxaOrigemUsada(origem: String) {
-        Log.i(tag, "taxa_origem_usada origem=$origem")
+        Log.i(tag, "rates_origin origem=$origem")
+    }
+
+    override fun chartTooltipUsed() {
+        Log.i(tag, "chart_tooltip_used")
+    }
+
+    override fun screenViewed(screen: String) {
+        Log.i(tag, "screen_view screen=$screen")
     }
 }

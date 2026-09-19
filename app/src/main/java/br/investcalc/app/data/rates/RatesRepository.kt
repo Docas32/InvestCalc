@@ -15,7 +15,7 @@ import kotlinx.coroutines.flow.StateFlow
  * 4. Remote Config (cdi_anual_percentual_default, selic_anual_percentual_default,
  *    ipca_12m_percentual_default);
  * 5. XML default (res/raw/taxas_defaults.xml);
- * 6. Valores herdados hermeticamente: { cdi = 10.90, selic = 10.90,
+ * 6. Valores herdados hermeticamente: { cdi = 13.90, selic = 13.90,
  *    ipca = 4.50 } a.a..
  *
  * Contrato **nunca lança** exceção: toda entrega é via [RatesSnapshot] com

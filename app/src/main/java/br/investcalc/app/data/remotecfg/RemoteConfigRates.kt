@@ -1,5 +1,6 @@
 package br.investcalc.app.data.remotecfg
 
+import br.investcalc.app.R
 import br.investcalc.app.data.rates.RatesSnapshot
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig
 import kotlinx.coroutines.tasks.await
@@ -14,25 +15,25 @@ interface RemoteConfigRates {
 }
 
 /**
- * Implementação de produção via Firebase Remote Config. Nunca lança: se o
- * Firebase estiver indisponível (sem Play Services, timeouts, valores
- * ausentes ou inválidos) retorna `null` e a cadeia degrada para o degradante
- * XML/falback. O fetch é ativo mas com curto prazo de frescor do cache
- * padrão do RC — o contrato "UI nunca bloqueia" vale por ser suspenso.
+ * Implementação de produção via Firebase Remote Config, com as chaves
+ * `fallback_di_aa`, `fallback_selic_aa` e `fallback_ipca_aa` e os defaults do
+ * XML (T1/P4: 13.90 / 13.90 / 4.50). Nunca lança: se o Firebase estiver
+ * indisponível (sem Play Services, timeouts, valores ausentes ou inválidos)
+ * retorna `null` e a cadeia degrada para o XML/fallback.
  */
-class FirebaseRemoteConfigRates(
-    private val cacheMaxAgeSegundos: Long = 600L,
-) : RemoteConfigRates {
+class FirebaseRemoteConfigRates : RemoteConfigRates {
 
     private val remoteConfig: FirebaseRemoteConfig by lazy {
-        FirebaseRemoteConfig.getInstance()
+        FirebaseRemoteConfig.getInstance().apply {
+            setDefaultsAsync(R.xml.remote_config_defaults)
+        }
     }
 
     override suspend fun carregar(): RatesSnapshot? {
         return try {
             val config = remoteConfig
             config.fetchAndActivate().await()
-            val cdi = config.getDouble(CHAVE_CDI)
+            val cdi = config.getDouble(CHAVE_DI)
             val selic = config.getDouble(CHAVE_SELIC)
             val ipca = config.getDouble(CHAVE_IPCA)
             if (cdi <= 0.0 || selic <= 0.0 || ipca <= 0.0) null
@@ -48,8 +49,8 @@ class FirebaseRemoteConfigRates(
     }
 
     private companion object {
-        const val CHAVE_CDI = "cdi_anual_percentual_default"
-        const val CHAVE_SELIC = "selic_anual_percentual_default"
-        const val CHAVE_IPCA = "ipca_12m_percentual_default"
+        const val CHAVE_DI = "fallback_di_aa"
+        const val CHAVE_SELIC = "fallback_selic_aa"
+        const val CHAVE_IPCA = "fallback_ipca_aa"
     }
 }

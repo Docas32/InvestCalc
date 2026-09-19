@@ -51,7 +51,7 @@ class BcbRatesRepositoryTest {
     }
 
     @Test
-    fun `falha de rede degrada para o fallback 10 90`() = runBlocking {
+    fun `falha de rede degrada para o fallback embutido`() = runBlocking {
         val repo = BcbRatesRepository(
             api = FakeBcbApi(erro = true),
             retryAtrasoMs = { 0L },

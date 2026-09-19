@@ -51,6 +51,7 @@ import kotlin.math.abs
 fun ComparadorScreen(
     taxas: RatesSnapshot,
     taxaOrigemLabel: String,
+    onSimulacaoRealizada: (String, Int, Boolean) -> Unit = { _, _, _ -> },
 ) {
     var valorInicialTexto by remember { mutableStateOf("100000") }
     var aporteMensalTexto by remember { mutableStateOf("0") }
@@ -167,6 +168,7 @@ fun ComparadorScreen(
                             meses = meses,
                         )
                         resultado = calculado
+                        onSimulacaoRealizada("comparador", meses, aporteMensal > 0.0)
                         null
                     }
                 }

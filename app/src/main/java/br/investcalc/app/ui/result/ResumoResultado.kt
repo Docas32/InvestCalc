@@ -12,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import br.investcalc.app.R
+import br.investcalc.app.core.format.CurrencyFormat
 import br.investcalc.app.domain.model.InvestmentResult
 import java.util.Locale
 
@@ -64,12 +65,9 @@ private fun LinhaResumo(rotulo: String, centavos: Long, destaque: Boolean = fals
             color = if (destaque) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
         )
         Text(
-            text = "R$ " + formatarCentavos(centavos),
+            text = CurrencyFormat.format(centavos),
             style = if (destaque) MaterialTheme.typography.titleMedium else MaterialTheme.typography.bodyMedium,
             color = if (destaque) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
         )
     }
 }
-
-private fun formatarCentavos(centavos: Long): String =
-    String.format(Locale.ROOT, "%,.2f", centavos / 100.0)

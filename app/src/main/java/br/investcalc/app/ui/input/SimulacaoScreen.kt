@@ -33,8 +33,8 @@ import br.investcalc.app.domain.model.InvestmentResult
 import br.investcalc.app.domain.model.MonetaryValue
 import java.util.Locale
 
-/** Taxa DI anual padrão quando ainda não há taxa do BCB (fallback P3). */
-const val TAXA_DI_ANUAL_FALLBACK_PERCENTUAL = 10.90
+/** Taxa DI anual padrão quando ainda não há taxa do BCB (fallback P4: 13,90). */
+const val TAXA_DI_ANUAL_FALLBACK_PERCENTUAL = 13.90
 
 private const val PERCENTUAL_CDI_MIN = 0.0
 private const val PERCENTUAL_CDI_MAX = 1000.0
@@ -65,6 +65,7 @@ fun SimulacaoScreen(
     onResultadoPronto: (InvestmentResult) -> Unit,
     taxaDiAnualAutomatica: Double,
     taxaDiOrigemLabel: String,
+    onSimulacaoRealizada: (String, Int, Boolean) -> Unit = { _, _, _ -> },
 ) {
     var valorInicialTexto by rememberSaveable { mutableStateOf("100000") }
     var aporteMensalTexto by rememberSaveable { mutableStateOf("20000") }
@@ -278,6 +279,7 @@ fun SimulacaoScreen(
                         }
                         onSeriePronta(serie)
                         onResultadoPronto(resultado)
+                        onSimulacaoRealizada("cdi", meses, aporteMensal > 0.0)
                     }
                 }
             },

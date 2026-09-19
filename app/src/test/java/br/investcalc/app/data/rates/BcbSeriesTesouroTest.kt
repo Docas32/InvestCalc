@@ -30,7 +30,7 @@ class BcbSeriesTesouroTest {
     }
 
     @Test
-    fun `falha total degrada para fallback selic 10 90 ipca 4 50`() = runBlocking {
+    fun `falha total degrada para fallback selic 13 90 ipca 4 50`() = runBlocking {
         val repo = BcbRatesRepository(
             api = object : BcbApi {
                 override suspend fun obterSerie(codigo: Int, quantidade: Int): List<BcbSeriePoint> =
@@ -39,8 +39,8 @@ class BcbSeriesTesouroTest {
             retryAtrasoMs = { 0L },
         )
         val s = repo.taxaCdiAnual()
-        assertEquals(10.90, s.taxaCdiAnualPercentual, 1e-9)
-        assertEquals(10.90, s.taxaSelicAnualPercentual, 1e-9)
+        assertEquals(13.90, s.taxaCdiAnualPercentual, 1e-9)
+        assertEquals(13.90, s.taxaSelicAnualPercentual, 1e-9)
         assertEquals(4.50, s.variacaoIpca12MesesPercentual, 1e-9)
     }
 
@@ -53,7 +53,7 @@ class BcbSeriesTesouroTest {
         })
         val s = repo.taxaCdiAnual()
         assertEquals(13.90, s.taxaCdiAnualPercentual, 1e-9)
-        assertEquals(10.90, s.taxaSelicAnualPercentual, 1e-9)
+        assertEquals(13.90, s.taxaSelicAnualPercentual, 1e-9)
         assertEquals(4.50, s.variacaoIpca12MesesPercentual, 1e-9)
     }
 }

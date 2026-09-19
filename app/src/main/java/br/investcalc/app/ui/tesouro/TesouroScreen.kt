@@ -56,7 +56,7 @@ private enum class TesouroModo { SELIC, IPCA_PLUS, PREFIXADO }
  * domínio ([TesouroSelicCalculator], [TesouroIpcaPlusCalculator] e
  * [TesouroPrefixadoCalculator], todos pré-existentes).
  *
- * - Selic: taxa auto via BCB série 1178 (cache → API → fallback 10,90),
+ * - Selic: taxa auto via BCB série 1178 (cache → API → fallback 13,90),
  *   editável, com badge de origem (mesmo snapshot da camada de taxas);
  * - IPCA+: IPCA auto via série 13522 (fallback 4,50) + taxa real editável
  *   (hint "ex.: 6,20"); anual efetiva = (1+IPCA)(1+real) − 1;
@@ -70,6 +70,8 @@ private enum class TesouroModo { SELIC, IPCA_PLUS, PREFIXADO }
 fun TesouroScreen(
     taxas: RatesSnapshot,
     taxaOrigemLabel: String,
+    onSimulacaoRealizada: (String, Int, Boolean) -> Unit = { _, _, _ -> },
+    onTooltipUsado: () -> Unit = {},
 ) {
     var modo by remember { mutableStateOf(TesouroModo.SELIC) }
     var valorInicialTexto by remember { mutableStateOf("100000") }
@@ -147,6 +149,7 @@ fun TesouroScreen(
                 erroPrefixada = erroPrefixada,
                 onSerie = { serie = it },
                 onResultado = { resultado = it },
+                onSimulacaoRealizada = onSimulacaoRealizada,
             )
         },
         )
@@ -158,8 +161,7 @@ fun TesouroScreen(
             resultado?.let { ResumoResultado(it) }
             EvolutionChartScreen(
                 series = chart,
-                onTooltipUsed = {},
-                onTableOpened = {},
+                onTooltipUsed = onTooltipUsado,
             )
         }
     }
@@ -385,6 +387,7 @@ private fun simular(
     erroPrefixada: String,
     onSerie: (PatrimonioSeries) -> Unit,
     onResultado: (InvestmentResult) -> Unit,
+    onSimulacaoRealizada: (String, Int, Boolean) -> Unit,
 ): String? {
     val valorInicial = CurrencyInputMask.toReais(valorInicialTexto)
     val aporteMensal = CurrencyInputMask.toReais(aporteMensalTexto)
@@ -441,6 +444,15 @@ private fun simular(
 
     onSerie(serie)
     onResultado(resultado)
+    onSimulacaoRealizada(
+        when (modo) {
+            TesouroModo.SELIC -> "selic"
+            TesouroModo.IPCA_PLUS -> "ipca"
+            TesouroModo.PREFIXADO -> "prefixado"
+        },
+        meses,
+        aporteMensal > 0.0,
+    )
     return null
 }
 

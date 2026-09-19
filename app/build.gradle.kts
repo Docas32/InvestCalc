@@ -22,6 +22,13 @@ android {
         versionName = "0.1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        // SOMENTE IDs DE TESTE oficiais do Google (P4) — proibido ID real nesta fase.
+        buildConfigField("String", "ADMOB_BANNER_AD_ID", "\"ca-app-pub-3940256099942544/9214589741\"")
+        buildConfigField("String", "ADMOB_INTERSTITIAL_AD_ID", "\"ca-app-pub-3940256099942544/1033173712\"")
+        // Device hash do ConsentDebugSettings (DEBUG). Colhido do logcat ao
+        // rodar a primeira sessão de anúncios (regarg 2026-09-19).
+        buildConfigField("String", "ADMOB_TEST_DEVICE_HASHED_ID", "\"7036A9582DA6F0A3AA98A4857E163BF5\"")
     }
 
     buildTypes {
@@ -42,6 +49,7 @@ android {
 
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 
     packaging {
@@ -89,6 +97,7 @@ dependencies {
     implementation(libs.firebase.config)
 
     implementation(libs.play.services.ads)
+    implementation(libs.ump)
 
     debugImplementation(libs.androidx.compose.ui.tooling)
 

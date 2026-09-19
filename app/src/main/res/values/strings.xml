@@ -57,6 +57,9 @@
     <string name="anuncios_consentimento">Anúncios (consentimento)</string>
     <string name="anuncios_ativo">Ativo</string>
     <string name="anuncios_inativo">Inativo, sem ads</string>
+    <string name="ajustes_testes_title">Testes</string>
+    <string name="forcar_crash">Forçar crash (teste Crashlytics)</string>
+    <string name="forcar_crash_desc">Dispara uma exceção para validar o relatório do Crashlytics.</string>
 
     <string name="origem_taxa_fallback">fallback</string>
     <string name="origem_taxa_bcb">BCB · %1$s</string>
