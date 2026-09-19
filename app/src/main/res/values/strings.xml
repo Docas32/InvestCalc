@@ -16,6 +16,7 @@
     <string name="campo_aporte_mensal">Aporte mensal (R$)</string>
     <string name="campo_meses">Meses (1..9999)</string>
     <string name="campo_percentual_cdi" formatted="false">Percentual do CDI (%)</string>
+    <string name="campo_placeholder_moeda">R$ 0,00</string>
     <string name="campo_taxa_di" formatted="false">Taxa DI (% a.a.)</string>
     <string name="campo_taxa_juros_mensal" formatted="false">Taxa de juros (% ao mês)</string>
     <string name="erro_percentual_cdi">Informe um número maior que 0 e no máximo 1000.</string>

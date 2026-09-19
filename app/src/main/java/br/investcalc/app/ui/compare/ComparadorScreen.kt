@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -21,8 +22,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import br.investcalc.app.R
+import br.investcalc.app.core.format.CurrencyInputMask
 import br.investcalc.app.data.rates.RatesSnapshot
 import br.investcalc.app.domain.calculator.ComparadorCalculator
 import br.investcalc.app.domain.calculator.ComparadorResultado
@@ -47,7 +51,7 @@ fun ComparadorScreen(
     taxas: RatesSnapshot,
     taxaOrigemLabel: String,
 ) {
-    var valorInicialTexto by remember { mutableStateOf("1000") }
+    var valorInicialTexto by remember { mutableStateOf("100000") }
     var aporteMensalTexto by remember { mutableStateOf("0") }
     var mesesTexto by remember { mutableStateOf("12") }
     var percentualCdbTexto by remember { mutableStateOf("100") }
@@ -74,18 +78,28 @@ fun ComparadorScreen(
         Spacer(Modifier.height(12.dp))
 
         OutlinedTextField(
-            value = valorInicialTexto,
-            onValueChange = { valorInicialTexto = it },
+            value = CurrencyInputMask.apply(valorInicialTexto),
+            onValueChange = { valorInicialTexto = CurrencyInputMask.digitsOf(it) },
             label = { Text(stringResource(R.string.campo_valor_inicial)) },
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Number,
+                imeAction = ImeAction.Next,
+            ),
+            placeholder = { Text(stringResource(R.string.campo_placeholder_moeda)) },
             singleLine = true,
             modifier = Modifier.fillMaxWidth(),
         )
         Spacer(Modifier.height(8.dp))
 
         OutlinedTextField(
-            value = aporteMensalTexto,
-            onValueChange = { aporteMensalTexto = it },
+            value = CurrencyInputMask.apply(aporteMensalTexto),
+            onValueChange = { aporteMensalTexto = CurrencyInputMask.digitsOf(it) },
             label = { Text(stringResource(R.string.campo_aporte_mensal)) },
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Number,
+                imeAction = ImeAction.Next,
+            ),
+            placeholder = { Text(stringResource(R.string.campo_placeholder_moeda)) },
             singleLine = true,
             modifier = Modifier.fillMaxWidth(),
         )
@@ -131,8 +145,8 @@ fun ComparadorScreen(
 
         Button(
             onClick = {
-                val valorInicial = valorInicialTexto.parseDecimalBr() ?: 0.0
-                val aporteMensal = aporteMensalTexto.parseDecimalBr() ?: 0.0
+                val valorInicial = CurrencyInputMask.toReais(valorInicialTexto)
+                val aporteMensal = CurrencyInputMask.toReais(aporteMensalTexto)
                 val meses = mesesTexto.trim().toIntOrNull()?.coerceAtLeast(1) ?: 12
                 val pctCdb = percentualCdbTexto.parseDecimalBr() ?: 0.0
                 val pctLci = percentualLciTexto.parseDecimalBr() ?: 0.0

@@ -16,6 +16,7 @@
     <string name="campo_aporte_mensal">Monthly contribution (R$)</string>
     <string name="campo_meses">Months (1..9999)</string>
     <string name="campo_percentual_cdi" formatted="false">CDI percentage (%)</string>
+    <string name="campo_placeholder_moeda">R$ 0,00</string>
     <string name="campo_taxa_di" formatted="false">DI rate (% p.a.)</string>
     <string name="campo_taxa_juros_mensal" formatted="false">Interest rate (% per month)</string>
     <string name="erro_percentual_cdi">Enter a number greater than 0 and at most 1000.</string>

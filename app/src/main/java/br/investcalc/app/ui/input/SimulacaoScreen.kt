@@ -13,6 +13,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -23,6 +26,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import br.investcalc.app.R
+import br.investcalc.app.core.format.CurrencyInputMask
 import br.investcalc.app.domain.calculator.CdbCalculator
 import br.investcalc.app.domain.chart.PatrimonioSeries
 import br.investcalc.app.domain.chart.PatrimonioSeriesBuilder
@@ -64,8 +68,8 @@ fun SimulacaoScreen(
     taxaDiAnualAutomatica: Double,
     taxaDiOrigemLabel: String,
 ) {
-    var valorInicialTexto by remember { mutableStateOf("1000") }
-    var aporteMensalTexto by remember { mutableStateOf("200") }
+    var valorInicialTexto by remember { mutableStateOf("100000") }
+    var aporteMensalTexto by remember { mutableStateOf("20000") }
     var mesesTexto by remember { mutableStateOf("12") }
     var percentualCdiTexto by remember { mutableStateOf("100") }
     var taxaDiTexto by remember { mutableStateOf(taxaDiAnualAutomatica.formatarTaxaUi()) }
@@ -139,18 +143,28 @@ fun SimulacaoScreen(
         Spacer(Modifier.height(12.dp))
 
         OutlinedTextField(
-            value = valorInicialTexto,
-            onValueChange = { valorInicialTexto = it },
+            value = CurrencyInputMask.apply(valorInicialTexto),
+            onValueChange = { valorInicialTexto = CurrencyInputMask.digitsOf(it) },
             label = { Text(rotuloValorInicial) },
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Number,
+                imeAction = ImeAction.Next,
+            ),
+            placeholder = { Text(stringResource(R.string.campo_placeholder_moeda)) },
             singleLine = true,
             modifier = Modifier.fillMaxWidth(),
         )
         Spacer(Modifier.height(8.dp))
 
         OutlinedTextField(
-            value = aporteMensalTexto,
-            onValueChange = { aporteMensalTexto = it },
+            value = CurrencyInputMask.apply(aporteMensalTexto),
+            onValueChange = { aporteMensalTexto = CurrencyInputMask.digitsOf(it) },
             label = { Text(rotuloAporteMensal) },
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Number,
+                imeAction = ImeAction.Next,
+            ),
+            placeholder = { Text(stringResource(R.string.campo_placeholder_moeda)) },
             singleLine = true,
             modifier = Modifier.fillMaxWidth(),
         )
@@ -160,6 +174,10 @@ fun SimulacaoScreen(
             value = mesesTexto,
             onValueChange = { mesesTexto = it },
             label = { Text(rotuloMeses) },
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Number,
+                imeAction = ImeAction.Next,
+            ),
             singleLine = true,
             modifier = Modifier.fillMaxWidth(),
         )
@@ -172,6 +190,10 @@ fun SimulacaoScreen(
                 aviso = null
             },
             label = { Text(rotuloPercentualCdi) },
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Decimal,
+                imeAction = ImeAction.Next,
+            ),
             singleLine = true,
             isError = !percentualValido,
             supportingText = if (!percentualValido) {
@@ -190,6 +212,10 @@ fun SimulacaoScreen(
                 taxaDiEditadaManualmente = true
             },
             label = { Text(rotuloTaxaDi) },
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Decimal,
+                imeAction = ImeAction.Done,
+            ),
             singleLine = true,
             modifier = Modifier.fillMaxWidth(),
         )
@@ -214,6 +240,10 @@ fun SimulacaoScreen(
                 value = taxaMensalManualTexto,
                 onValueChange = { taxaMensalManualTexto = it },
                 label = { Text(rotuloTaxaMensalManual) },
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Decimal,
+                imeAction = ImeAction.Done,
+            ),
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
             )
@@ -223,8 +253,8 @@ fun SimulacaoScreen(
         Row(modifier = Modifier.fillMaxWidth()) {
             Button(
                 onClick = {
-                    val valorInicial = valorInicialTexto.parseDecimalBr() ?: 0.0
-                    val aporteMensal = aporteMensalTexto.parseDecimalBr() ?: 0.0
+                    val valorInicial = CurrencyInputMask.toReais(valorInicialTexto)
+                    val aporteMensal = CurrencyInputMask.toReais(aporteMensalTexto)
                     val usarManual = modoAvancado && taxaMensalManual > 0.0
                     when {
                         !percentualValido ->

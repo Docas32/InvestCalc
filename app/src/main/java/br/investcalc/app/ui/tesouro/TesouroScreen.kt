@@ -41,6 +41,7 @@ import br.investcalc.app.domain.model.MonetaryValue
 import br.investcalc.app.ui.chart.EvolutionChartScreen
 import br.investcalc.app.ui.input.formatarTaxaUi
 import br.investcalc.app.ui.input.parseDecimalBr
+import br.investcalc.app.core.format.CurrencyInputMask
 import br.investcalc.app.ui.result.ResumoResultado
 
 private enum class TesouroModo { SELIC, IPCA_PLUS, PREFIXADO }
@@ -67,8 +68,8 @@ fun TesouroScreen(
     taxaOrigemLabel: String,
 ) {
     var modo by remember { mutableStateOf(TesouroModo.SELIC) }
-    var valorInicialTexto by remember { mutableStateOf("1000") }
-    var aporteMensalTexto by remember { mutableStateOf("200") }
+    var valorInicialTexto by remember { mutableStateOf("100000") }
+    var aporteMensalTexto by remember { mutableStateOf("20000") }
     var mesesTexto by remember { mutableStateOf("12") }
 
     val selicAutomatica = taxas.taxaSelicAnualPercentual.takeIf { it > 0.0 }
@@ -238,8 +239,8 @@ private fun Formulario(
         Spacer(Modifier.height(12.dp))
 
         OutlinedTextField(
-            value = valorInicialTexto,
-            onValueChange = onValorInicialMudou,
+            value = CurrencyInputMask.apply(valorInicialTexto),
+            onValueChange = { onValorInicialMudou(CurrencyInputMask.digitsOf(it)) },
             label = { Text(stringResource(R.string.campo_valor_inicial)) },
             singleLine = true,
             modifier = Modifier.fillMaxWidth(),
@@ -247,8 +248,8 @@ private fun Formulario(
         Spacer(Modifier.height(8.dp))
 
         OutlinedTextField(
-            value = aporteMensalTexto,
-            onValueChange = onAporteMensalMudou,
+            value = CurrencyInputMask.apply(aporteMensalTexto),
+            onValueChange = { onAporteMensalMudou(CurrencyInputMask.digitsOf(it)) },
             label = { Text(stringResource(R.string.campo_aporte_mensal)) },
             singleLine = true,
             modifier = Modifier.fillMaxWidth(),
@@ -363,8 +364,8 @@ private fun simular(
     onSerie: (PatrimonioSeries) -> Unit,
     onResultado: (InvestmentResult) -> Unit,
 ): String? {
-    val valorInicial = valorInicialTexto.parseDecimalBr() ?: 0.0
-    val aporteMensal = aporteMensalTexto.parseDecimalBr() ?: 0.0
+    val valorInicial = CurrencyInputMask.toReais(valorInicialTexto)
+    val aporteMensal = CurrencyInputMask.toReais(aporteMensalTexto)
     val meses = mesesTexto.trim().toIntOrNull()?.coerceAtLeast(1) ?: 12
 
     if (valorInicial <= 0.0 && aporteMensal <= 0.0) return erroValorAporte
