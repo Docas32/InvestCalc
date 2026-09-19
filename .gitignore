@@ -9,4 +9,6 @@ captures/
 .cxx/
 *.hprof
 keystore.properties
-*.jksgoogle-services.json
+*.jks
+google-services.json
+__pycache__/

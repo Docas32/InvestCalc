@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools"
+    tools:shrinkMode="strict"
+    tools:discard="@string/ajustes_testes_title,@string/forcar_crash,@string/forcar_crash_desc" />

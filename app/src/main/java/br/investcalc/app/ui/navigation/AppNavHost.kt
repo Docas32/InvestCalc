@@ -169,32 +169,27 @@ fun AppNavHost(modifier: Modifier = Modifier) {
                 NavigationBarItem(
                     selected = rotaAtual == ROTA_CALCULADORA,
                     onClick = { navController.navigarPara(ROTA_CALCULADORA) },
-                    icon = { Icon(Icons.Filled.Calculate, contentDescription = null) },
-                    label = { Text(stringResource(R.string.nav_calculadora)) },
+                    icon = { Icon(Icons.Filled.Calculate, stringResource(R.string.nav_calculadora)) },
                 )
                 NavigationBarItem(
                     selected = rotaAtual == ROTA_TESOURO,
                     onClick = { navController.navigarPara(ROTA_TESOURO) },
-                    icon = { Icon(Icons.Filled.AccountBalance, contentDescription = null) },
-                    label = { Text(stringResource(R.string.nav_tesouro)) },
+                    icon = { Icon(Icons.Filled.AccountBalance, stringResource(R.string.nav_tesouro)) },
                 )
                 NavigationBarItem(
                     selected = rotaAtual == ROTA_COMPARAR,
                     onClick = { navController.navigarPara(ROTA_COMPARAR) },
-                    icon = { Icon(Icons.AutoMirrored.Filled.CompareArrows, contentDescription = null) },
-                    label = { Text(stringResource(R.string.nav_comparar)) },
+                    icon = { Icon(Icons.AutoMirrored.Filled.CompareArrows, stringResource(R.string.nav_comparar)) },
                 )
                 NavigationBarItem(
                     selected = rotaAtual == ROTA_GUIA,
                     onClick = { navController.navigarPara(ROTA_GUIA) },
-                    icon = { Icon(Icons.Filled.MenuBook, contentDescription = null) },
-                    label = { Text(stringResource(R.string.nav_guia)) },
+                    icon = { Icon(Icons.Filled.MenuBook, stringResource(R.string.nav_guia)) },
                 )
                 NavigationBarItem(
                     selected = rotaAtual == ROTA_AJUSTES,
                     onClick = { navController.navigarPara(ROTA_AJUSTES) },
-                    icon = { Icon(Icons.Filled.Settings, contentDescription = null) },
-                    label = { Text(stringResource(R.string.nav_ajustes)) },
+                    icon = { Icon(Icons.Filled.Settings, stringResource(R.string.nav_ajustes)) },
                 )
             }
         },
