@@ -9,6 +9,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.CompareArrows
 import androidx.compose.material.icons.filled.AccountBalance
 import androidx.compose.material.icons.filled.Calculate
+import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
@@ -54,6 +55,7 @@ import br.investcalc.app.domain.model.InvestmentResult
 import br.investcalc.app.ui.ads.BannerRodape
 import br.investcalc.app.ui.chart.EvolutionChartScreen
 import br.investcalc.app.ui.compare.ComparadorScreen
+import br.investcalc.app.ui.guia.GuiaScreen
 import br.investcalc.app.ui.input.SimulacaoScreen
 import br.investcalc.app.ui.input.TAXA_DI_ANUAL_FALLBACK_PERCENTUAL
 import br.investcalc.app.ui.result.ResumoResultado
@@ -66,6 +68,7 @@ import java.util.Locale
 private const val ROTA_CALCULADORA = "calculadora"
 private const val ROTA_TESOURO = "tesouro"
 private const val ROTA_COMPARAR = "comparar"
+private const val ROTA_GUIA = "guia"
 private const val ROTA_AJUSTES = "ajustes"
 
 /** Abas de cálculo que exibem o banner adaptativo no rodapé (T2/P4). */
@@ -74,12 +77,12 @@ private val rotasComBanner = setOf(ROTA_CALCULADORA, ROTA_TESOURO, ROTA_COMPARAR
 /**
  * Navegação principal do InvestCalc (Material 3).
  *
- * Bottom nav com 4 abas (Calculadora, Tesouro Direto, Comparar, Ajustes),
- * camada de taxas compartilhada ([BcbRatesRepository]) e a pasta de
+ * Bottom nav com 5 abas (Calculadora, Tesouro Direto, Comparar, Guia,
+ * Ajustes), camada de taxas compartilhada ([BcbRatesRepository]) e a pasta de
  * monetização/fidelidade (T2/P4), tudo fio-a-fio aqui (sem Hilt):
  *
  *  - Analytics (Firebase): `calculation_performed`, `rates_origin`,
- *    `chart_tooltip_used` e `screen_view` nas 4 abas;
+ *    `chart_tooltip_used` e `screen_view` nas 5 abas;
  *  - Remote Config de ads (`ads_enabled`, `interstitial_frequency`) buscado
  *    no cold start;
  *  - UMP ([UmConsent]): formulário na primeira abertura e reaberto pelo toggle
@@ -182,6 +185,12 @@ fun AppNavHost(modifier: Modifier = Modifier) {
                     label = { Text(stringResource(R.string.nav_comparar)) },
                 )
                 NavigationBarItem(
+                    selected = rotaAtual == ROTA_GUIA,
+                    onClick = { navController.navigarPara(ROTA_GUIA) },
+                    icon = { Icon(Icons.Filled.MenuBook, contentDescription = null) },
+                    label = { Text(stringResource(R.string.nav_guia)) },
+                )
+                NavigationBarItem(
                     selected = rotaAtual == ROTA_AJUSTES,
                     onClick = { navController.navigarPara(ROTA_AJUSTES) },
                     icon = { Icon(Icons.Filled.Settings, contentDescription = null) },
@@ -218,6 +227,9 @@ fun AppNavHost(modifier: Modifier = Modifier) {
                         taxaOrigemLabel = origemLabel,
                         onSimulacaoRealizada = registrarSimulacao,
                     )
+                }
+                composable(ROTA_GUIA) {
+                    GuiaScreen()
                 }
                 composable(ROTA_AJUSTES) {
                     AjustesScreen(

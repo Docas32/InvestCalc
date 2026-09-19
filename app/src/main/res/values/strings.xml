@@ -5,6 +5,7 @@
     <string name="nav_calculadora">Calculadora</string>
     <string name="nav_tesouro">Tesouro Direto</string>
     <string name="nav_comparar">Comparar</string>
+    <string name="nav_guia">Guia</string>
     <string name="nav_ajustes">Ajustes</string>
 
     <string name="calculadora_title">Calculadora CDI/CDB</string>
@@ -63,6 +64,24 @@
 
     <string name="origem_taxa_fallback">fallback</string>
     <string name="origem_taxa_bcb">BCB · %1$s</string>
+
+    <string name="guia_title">Guia educativo</string>
+    <string name="guia_t1_titulo" formatted="false">O que é o CDI (e por que os CDBs são &quot;% do CDI&quot;)</string>
+    <string name="guia_t1_corpo" formatted="false">O CDI é a taxa média dos empréstimos de um dia que os bancos fazem entre si. Ela acompanha de perto a Selic e é a referência da renda fixa. Quando um CDB promete &quot;110% do CDI&quot;, ele paga 1,10 vez o CDI do período. Por isso a Calculadora pede um percentual: o ganho em reais depende do CDI informado pelo Banco Central.</string>
+    <string name="guia_t2_titulo" formatted="false">CDB × LCI/LCA: a regra do 112,5%</string>
+    <string name="guia_t2_corpo" formatted="false">CDB paga Imposto de Renda sobre o ganho; LCI e LCA são isentas para pessoa física. Só comparar o percentual do CDI engana. Regra de bolso &quot;dos 112,5%&quot;: entre 6 e 12 meses, uma LCI a 90% do CDI equivale a um CDB a 112,5% do CDI (90 ÷ 0,80). No mesmo percentual, a LCI vence — e quanto menor o prazo, maior o efeito. A aba Comparar mostra o vencedor exato.</string>
+    <string name="guia_t3_titulo">Tesouro Selic e o preço de mercado</string>
+    <string name="guia_t3_corpo">O Tesouro Selic rende perto da taxa Selic, atualizada a cada dia útil. Levado até o vencimento, o ganho segue o combinado. Mas o título é marcado a mercado: vendido antes, o preço pode ter deságio ou ágio, e o rendimento real muda. O app aplica só a taxa contratada — não calcula deságio nem custos de venda antecipada.</string>
+    <string name="guia_t4_titulo" formatted="false">Tesouro IPCA+ e o que &quot;proteção&quot; significa</string>
+    <string name="guia_t4_corpo" formatted="false">O IPCA+ paga a inflação medida pelo IPCA mais uma taxa real, fixada na compra. &quot;Proteção&quot; significa que o poder de compra segue a inflação: se o IPCA sobe, o rendimento sobe junto. O app combina as duas partes: anual = (1 + IPCA) × (1 + taxa real) − 1. Exemplo: 6% de IPCA com 6,20% real rendem ≈ 12,57% ao ano.</string>
+    <string name="guia_t5_titulo">Imposto de Renda regressivo</string>
+    <string name="guia_t5_corpo" formatted="false">O IR da renda fixa é regressivo: quanto mais tempo aplicado, menor a alíquota. Até 6 meses: 22,5%. De 6 a 12 meses: 20%. De 1 a 2 anos: 17,5%. Acima de 2 anos: 15%. Atenção: o imposto incide só sobre o ganho (o rendimento), nunca sobre o valor investido. O app desconta o IR do prazo em toda simulação.</string>
+    <string name="guia_t6_titulo">Juros compostos na prática</string>
+    <string name="guia_t6_corpo" formatted="false">Nos juros compostos, cada mês rende sobre o montante todo: os juros passam a gerar juros. Exemplo do app: R$ 1.000,00 a 0,7% ao mês por 12 meses vira R$ 1.087,31. A conta é 1.000 × 1,007¹². Os primeiros meses rendem pouco; a curva acelera no fim — é o que o gráfico de evolução mostra.</string>
+    <string name="guia_t7_titulo">De onde vêm as taxas</string>
+    <string name="guia_t7_corpo">As taxas vêm das séries abertas do Banco Central: CDI, Selic e IPCA são buscadas pela internet. A badge &quot;BCB · dd/mm&quot; mostra a data da atualização. Os valores ficam em cache por 24 horas. Sem internet, o app usa o último valor válido ou o fallback local — a tela nunca trava.</string>
+    <string name="guia_t8_titulo">Limitações do app</string>
+    <string name="guia_t8_corpo">O app calcula em meses uniformes (12 meses ≈ 1 ano), não em dias corridos exatos — o vencimento real pode variar dias. Não há come-cotas (antecipação semestral de IR de fundos) nem IOF para resgates antes de 30 dias. Também não simula deságio do Tesouro vendido antes nem a carência de LCI/LCA. Use os números como estimativa.</string>
 
     <string name="tesouro_title">Tesouro Direto</string>
     <string name="tesouro_desc">Rentabilidade dos títulos públicos será calculada aqui.</string>

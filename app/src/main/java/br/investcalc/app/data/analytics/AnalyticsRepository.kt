@@ -31,6 +31,6 @@ interface AnalyticsRepository {
     /** Registra o uso do tooltip do gráfico de evolução. */
     fun chartTooltipUsed()
 
-    /** Registra a exibição de uma aba (screen_view nas 4 abas). */
+    /** Registra a exibição de uma aba (screen_view nas 5 abas). */
     fun screenViewed(screen: String)
 }

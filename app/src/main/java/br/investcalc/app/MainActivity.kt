@@ -13,9 +13,9 @@ import br.investcalc.app.ui.theme.InvestCalcTheme
  * O setContent rendereza unicamente a navegacao principal
  * ([AppNavHost]) sob o tema Material 3 do app ([InvestCalcTheme]): paleta
  * indigo escura de referencia do print + paleta clara, seguindo o modo do
- * sistema. Bottom nav com 4 abas (Calculadora, Tesouro Direto, Comparar,
- * Ajustes); o fluxo de simulacao vive dentro da aba Calculadora e nenhum
- * estado global e persistido aqui.
+ * sistema. Bottom nav com 5 abas (Calculadora, Tesouro Direto, Comparar,
+ * Guia, Ajustes); o fluxo de simulacao vive dentro da aba Calculadora e
+ * nenhum estado global e persistido aqui.
  */
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {

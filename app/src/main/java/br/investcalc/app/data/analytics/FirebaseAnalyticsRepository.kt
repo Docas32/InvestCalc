@@ -11,7 +11,7 @@ import com.google.firebase.analytics.FirebaseAnalytics
  *  - `calculation_performed` → type, months, has_aporte;
  *  - `rates_origin` → origem (cache_fresca|bcb|cache_stale|remote_config|xml|fallback);
  *  - `chart_tooltip_used` → tooltip do gráfico;
- *  - `screen_view` → `screen_name` nas 4 abas.
+ *  - `screen_view` → `screen_name` nas 5 abas.
  *
  * Nenhum destes métodos bloqueia: o Firebase Analytics enfileira o evento via
  * binder do Google Play Services; a UI segue 100% livre.

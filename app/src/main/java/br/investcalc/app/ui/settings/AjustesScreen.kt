@@ -22,6 +22,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import br.investcalc.app.BuildConfig
 import br.investcalc.app.R
 
 /**
@@ -30,7 +31,9 @@ import br.investcalc.app.R
  * - "Anúncios (consentimento)": reflete o estado atual do UMP; ao alternar,
  *   [onAlternarConsentimento] reabre o formulário de consentimento — quem
  *   decide é o próprio usuário no formulário (toggle é o gatilho);
- * - "Forçar crash (teste)": dispara o teste do Crashlytics (removido no P5).
+ * - "Forçar crash (teste)": dispara o teste do Crashlytics, visível APENAS
+ *   em build DEBUG ([BuildConfig.DEBUG]) — some no release sem perder o
+ *   caminho de teste do Crashlytics (P5).
  */
 @Composable
 fun AjustesScreen(
@@ -63,20 +66,22 @@ fun AjustesScreen(
             onToggle = onAlternarConsentimento,
         )
 
-        Spacer(modifier = Modifier.height(24.dp))
-        HorizontalDivider()
-        Spacer(modifier = Modifier.height(16.dp))
+        if (BuildConfig.DEBUG) {
+            Spacer(modifier = Modifier.height(24.dp))
+            HorizontalDivider()
+            Spacer(modifier = Modifier.height(16.dp))
 
-        Text(
-            text = stringResource(R.string.ajustes_testes_title),
-            style = MaterialTheme.typography.titleMedium,
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        LinhaTexto(
-            rotulo = stringResource(R.string.forcar_crash),
-            descricao = stringResource(R.string.forcar_crash_desc),
-            onClick = onForcarCrashTeste,
-        )
+            Text(
+                text = stringResource(R.string.ajustes_testes_title),
+                style = MaterialTheme.typography.titleMedium,
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            LinhaTexto(
+                rotulo = stringResource(R.string.forcar_crash),
+                descricao = stringResource(R.string.forcar_crash_desc),
+                onClick = onForcarCrashTeste,
+            )
+        }
     }
 }
 

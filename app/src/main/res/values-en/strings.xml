@@ -5,6 +5,7 @@
     <string name="nav_calculadora">Calculator</string>
     <string name="nav_tesouro">Treasury Direct</string>
     <string name="nav_comparar">Compare</string>
+    <string name="nav_guia">Guide</string>
     <string name="nav_ajustes">Settings</string>
 
     <string name="calculadora_title">CDI/CDB Calculator</string>
@@ -57,9 +58,30 @@
     <string name="anuncios_consentimento">Ads (consent)</string>
     <string name="anuncios_ativo">Active</string>
     <string name="anuncios_inativo">Inactive, no ads</string>
+    <string name="ajustes_testes_title">Testing</string>
+    <string name="forcar_crash">Force crash (Crashlytics test)</string>
+    <string name="forcar_crash_desc">Triggers an exception to validate the Crashlytics report.</string>
 
     <string name="origem_taxa_fallback">fallback</string>
     <string name="origem_taxa_bcb">BCB · %1$s</string>
+
+    <string name="guia_title">Educational guide</string>
+    <string name="guia_t1_titulo" formatted="false">What is the CDI (and why CDBs are &quot;% of the CDI&quot;)</string>
+    <string name="guia_t1_corpo" formatted="false">The CDI is the average rate of one-day loans that banks make to each other. It closely tracks the Selic rate and is the benchmark of Brazilian fixed income. When a CDB promises &quot;110% of the CDI&quot;, it pays 1.10 times the period CDI. That is why the calculator asks for a percentage: the gain in reais depends on the CDI rate reported by the Central Bank.</string>
+    <string name="guia_t2_titulo" formatted="false">CDB vs LCI/LCA: the 112.5% rule</string>
+    <string name="guia_t2_corpo" formatted="false">CDBs pay income tax on the gain; LCI and LCA are tax-exempt for individuals. Comparing only the CDI percentage is misleading. Pocket rule &quot;the 112.5% rule&quot;: between 6 and 12 months, an LCI at 90% of the CDI matches a CDB at 112.5% of the CDI (90 ÷ 0.80). At the same percentage, the LCI wins — and the shorter the term, the bigger the effect. The Compare tab shows the exact winner.</string>
+    <string name="guia_t3_titulo">Tesouro Selic and the market price</string>
+    <string name="guia_t3_corpo">Tesouro Selic pays close to the Selic rate, updated every business day. Held to maturity, the gain follows the agreed rate. But the bond is marked to market: sold early, the price may carry a discount or a premium, and the real return changes. The app applies only the contracted rate — it does not calculate the discount or early-sale costs.</string>
+    <string name="guia_t4_titulo" formatted="false">Tesouro IPCA+ and what &quot;protection&quot; means</string>
+    <string name="guia_t4_corpo" formatted="false">IPCA+ pays the inflation measured by the IPCA plus a real rate set at purchase. &quot;Protection&quot; means that purchasing power follows inflation: if the IPCA rises, the return rises with it. The app combines both parts: annual = (1 + IPCA) × (1 + real rate) − 1. Example: 6% IPCA with a 6.20% real rate yields ≈ 12.57% a year.</string>
+    <string name="guia_t5_titulo">Regressive income tax</string>
+    <string name="guia_t5_corpo" formatted="false">Fixed-income tax is regressive: the longer the money stays invested, the lower the rate. Up to 6 months: 22.5%. From 6 to 12 months: 20%. From 1 to 2 years: 17.5%. Above 2 years: 15%. Note: tax applies only to the gain (the yield), never to the amount invested. The app deducts the term tax in every simulation.</string>
+    <string name="guia_t6_titulo">Compound interest in practice</string>
+    <string name="guia_t6_corpo" formatted="false">With compound interest, each month yields on the whole balance: interest starts generating interest. App example: R$ 1,000.00 at 0.7% a month for 12 months becomes R$ 1,087.31. The math is 1,000 × 1.007¹². Early months earn little; the curve accelerates toward the end — that is what the evolution chart shows.</string>
+    <string name="guia_t7_titulo">Where the rates come from</string>
+    <string name="guia_t7_corpo">The rates come from the Central Bank open series: the CDI, the Selic rate and the IPCA are fetched from the internet. The &quot;BCB · dd/mm&quot; badge shows the update date. The values stay cached for 24 hours. Without internet, the app uses the last valid value or the local fallback — the screen never freezes.</string>
+    <string name="guia_t8_titulo">App limitations</string>
+    <string name="guia_t8_corpo">The app calculates in uniform months (12 months ≈ 1 year), not in exact calendar days — the real maturity may shift by days. There is no come-cotas (the semi-annual tax prepayment of funds) and no IOF for redemptions within 30 days. It also does not simulate a discounted early Tesouro sale or the LCI/LCA grace period. Treat the numbers as an estimate.</string>
 
     <string name="tesouro_title">Treasury Direct</string>
     <string name="tesouro_desc">Treasury bond returns will be calculated here.</string>
