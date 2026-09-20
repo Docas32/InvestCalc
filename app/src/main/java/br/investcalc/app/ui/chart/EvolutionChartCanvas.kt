@@ -1,7 +1,9 @@
 package br.investcalc.app.ui.chart
 
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.drag
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -30,6 +32,7 @@ import br.investcalc.app.domain.chart.EvolutionChartPoint
 import br.investcalc.app.domain.chart.EvolutionChartSeries
 import java.time.format.DateTimeFormatter
 import java.util.Locale
+import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.roundToInt
 
@@ -59,9 +62,13 @@ internal fun rendimentoNoMes(pontos: List<EvolutionChartPoint>, idx: Int): Doubl
  *  - série **"Patrimônio (juros compostos)"**: curva na cor primária (por
  *    cima);
  *  - área preenchida **entre** as duas linhas = o que veio dos juros;
- *  - toque/arraste seleciona o mês mais próximo e abre um tooltip com mês,
- *    saldo, rendimento do mês e juros acumulados — com **clamp** nas bordas
- *    (X e Y) para nunca sair do canvas;
+ *  - toque/arraste **HORIZONTAL** seleciona o mês mais próximo e abre um
+ *    tooltip com mês, saldo, rendimento do mês e juros acumulados — com
+ *    **clamp** nas bordas (X e Y) para nunca sair do canvas;
+ *  - T2/P7: o tooltip responde SOMENTE a arraste horizontal — arraste
+ *    vertical sobre o gráfico NUNCA é consumido, então a página rola;
+ *  - T2/P7: insets interno de eixo (rótulo Y mais largo + altura do rótulo
+ *    X) para que TODOS os labels fiquem 100% dentro do canvas, sem clip.
  *  - O(n) em tudo: 999 pontos renderizam sem problema (sem alocação por
  *    frame fora do draw, sem iteração por ponto no tooltip).
  *
@@ -92,6 +99,17 @@ fun EvolutionChartCanvas(
     var selecionado by remember { mutableStateOf<Int?>(null) }
     var tooltipUsado by remember { mutableStateOf(false) }
 
+    // Largura do maior rótulo do eixo Y ("R$ 3.688,31") — usada tanto no
+    // desenho quanto no mapeamento toque→mês (mesma origem, zero duplicação).
+    val larguraLabelY = remember(pontos) {
+        val topoV = pontos.maxOf { it.saldoCompostoFimDoMes }.coerceAtLeast(0.0)
+        val inicial = pontos.first().totalInvestidoFimDoMes
+        max(
+            textMeasurer.measure(AnnotatedString(formatarMoeda(inicial)), estiloRotulo).size.width,
+            textMeasurer.measure(AnnotatedString(formatarMoeda(topoV)), estiloRotulo).size.width,
+        ).toFloat()
+    }
+
     LaunchedEffect(selecionado) {
         if (selecionado != null && !tooltipUsado) {
             tooltipUsado = true
@@ -113,22 +131,44 @@ fun EvolutionChartCanvas(
         modifier = modifier
             .clipToBounds()
             .pointerInput(pontos.size) {
+                val pad = 4.dp.toPx()
+                val espaco = 4.dp.toPx()
+                val esquerda = pad + larguraLabelY + espaco
+                val direita = size.width - pad
+                val limiarSlop = viewConfiguration.touchSlop.toFloat()
+
                 fun indiceDoToque(posicao: Offset): Int {
                     if (pontos.isEmpty()) return 0
-                    val padX = 6.dp.toPx()
                     val n = pontos.size
-                    val ux = (size.width - 2 * padX) / max(n - 1, 1).toFloat()
-                    val m = ((posicao.x - padX) / ux).roundToInt()
+                    val areaLargura = (direita - esquerda).coerceAtLeast(1f)
+                    val ux = areaLargura / max(n - 1, 1).toFloat()
+                    val m = ((posicao.x - esquerda) / ux).roundToInt()
                     // Clamp nas bordas: nunca sai do intervalo [0, n-1].
                     return m.coerceIn(0, n - 1)
                 }
-                detectDragGestures(
-                    onDragStart = { selecionado = indiceDoToque(it) },
-                    onDrag = { change, _ ->
-                        selecionado = indiceDoToque(change.position)
-                        change.consume()
-                    },
-                )
+
+                // T2/P7: o tooltip responde SÓ ao arraste horizontal; arraste
+                // vertical sobre o gráfico NÃO é consumido → a página rola.
+                awaitEachGesture {
+                    val down = awaitFirstDown(requireUnconsumed = false)
+                    var decidido = false
+                    var horizontal = false
+                    drag(down.id) { change ->
+                        val dx = change.position.x - down.position.x
+                        val dy = change.position.y - down.position.y
+                        if (!decidido && (dx * dx + dy * dy) >= limiarSlop * limiarSlop) {
+                            decidido = true
+                            horizontal = abs(dx) >= abs(dy)
+                            if (horizontal) {
+                                selecionado = indiceDoToque(change.position)
+                                change.consume()
+                            }
+                        } else if (horizontal) {
+                            selecionado = indiceDoToque(change.position)
+                            change.consume()
+                        }
+                    }
+                }
             },
     ) {
         val n = pontos.size
@@ -140,13 +180,33 @@ fun EvolutionChartCanvas(
         val topo = pontos.maxOf { it.saldoCompostoFimDoMes }.coerceAtLeast(0.0)
         if (topo <= 0.0) return@Canvas
 
-        val padX = 6.dp.toPx()
-        val padY = 6.dp.toPx()
-        val ux = (largura - 2 * padX) / max(n - 1, 1).toFloat()
-        val uy = (altura - 2 * padY) / topo
+        fun medirRotulo(texto: String): TextLayoutResult =
+            textMeasurer.measure(AnnotatedString(texto), estiloRotulo)
 
-        fun x(m: Int): Float = padX + m * ux
-        fun y(v: Double): Float = (altura - padY) - (v * uy).toFloat()
+        val rotuloMesIni = medirRotulo(formatoMes.format(pontos.first().mes))
+        val rotuloMesFim = medirRotulo(formatoMes.format(pontos.last().mes))
+        val rotuloValIni = medirRotulo(formatarMoeda(pontos.first().totalInvestidoFimDoMes))
+        val rotuloValFim = medirRotulo(formatarMoeda(topo))
+
+        // Insets internos (T2/P7): rótulos de eixo INSIDE do canvas — o
+        // gráfico ocupa o retângulo restante, sem nada clipped.
+        val pad = 4.dp.toPx()
+        val espaco = 4.dp.toPx()
+        val alturaLabelX = rotuloMesIni.size.height.toFloat()
+        val minAlturaY = minOf(rotuloValIni.size.height, rotuloValFim.size.height)
+
+        val esquerda = pad + larguraLabelY + espaco
+        val direita = largura - pad
+        val topoArea = pad + max(rotuloValIni.size.height, rotuloValFim.size.height) + espaco
+        val baseArea = altura - pad - alturaLabelX - espaco - minAlturaY
+
+        val areaLargura = (direita - esquerda).coerceAtLeast(1f)
+        val areaAltura = (baseArea - topoArea).coerceAtLeast(1f)
+        val ux = areaLargura / max(n - 1, 1).toFloat()
+        val uy = areaAltura / topo
+
+        fun x(m: Int): Float = esquerda + m * ux
+        fun y(v: Double): Float = baseArea - (v * uy).toFloat()
 
         // 1. Área preenchida entre a curva (topo) e a reta do total investido.
         val area = Path()
@@ -191,35 +251,26 @@ fun EvolutionChartCanvas(
         drawCircle(color = corPatrimonio, radius = 3.6.dp.toPx(), center = Offset(x(n - 1), y(ultimo.saldoCompostoFimDoMes)))
         drawCircle(color = corTotalInvestido, radius = 3.2.dp.toPx(), center = Offset(x(n - 1), y(ultimo.totalInvestidoFimDoMes)))
 
-        // 5. Rótulos mínimos dos eixos: mês inicial/final no X e valor
-        //    inicial/final no Y (discretos, na cor de contorno do tema).
-        fun medirRotulo(texto: String): TextLayoutResult =
-            textMeasurer.measure(AnnotatedString(texto), estiloRotulo)
-
-        val rotuloMesIni = medirRotulo(formatoMes.format(pontos.first().mes))
-        val rotuloMesFim = medirRotulo(formatoMes.format(pontos.last().mes))
-        val rotuloValIni = medirRotulo(formatarMoeda(pontos.first().totalInvestidoFimDoMes))
-        val rotuloValFim = medirRotulo(formatarMoeda(topo))
-
-        val baseY = altura - 2.dp.toPx() - rotuloMesIni.size.height
+        // 5. Rótulos discretos dos eixos (mês inicial/final no X; valor
+        //    inicial/final no Y), todos 100% dentro do canvas (T2/P7).
         drawText(
             rotuloMesIni,
-            topLeft = Offset(padX, baseY),
+            topLeft = Offset(esquerda, altura - pad - alturaLabelX),
         )
         drawText(
             rotuloMesFim,
-            topLeft = Offset(largura - padX - rotuloMesFim.size.width, baseY),
-        )
-        drawText(
-            rotuloValIni,
-            topLeft = Offset(padX, baseY - 2.dp.toPx() - rotuloValIni.size.height),
+            topLeft = Offset(largura - pad - rotuloMesFim.size.width, altura - pad - alturaLabelX),
         )
         drawText(
             rotuloValFim,
-            topLeft = Offset(padX, padY),
+            topLeft = Offset(pad, pad),
+        )
+        drawText(
+            rotuloValIni,
+            topLeft = Offset(pad, baseArea + espaco),
         )
 
-        // 6. Tooltip no mês selecionado, com clamp nas bordas (X e Y).
+        // 6. Tooltip no mês selecionado, com clamp dentro da área do gráfico.
         val idx = selecionado
         val textos = tooltipTextos
         if (idx != null && textos != null) {
@@ -239,28 +290,28 @@ fun EvolutionChartCanvas(
             boxLargura += 16.dp.toPx()
             boxAltura += 12.dp.toPx()
 
-            var esquerda = px - boxLargura / 2f
-            esquerda = esquerda.coerceIn(padX, largura - padX - boxLargura)
+            var esquerdaBox = px - boxLargura / 2f
+            esquerdaBox = esquerdaBox.coerceIn(esquerda, (direita - boxLargura).coerceAtLeast(esquerda))
             var topoBox = py - 8.dp.toPx() - boxAltura
-            if (topoBox < padY) topoBox = py + 8.dp.toPx()
-            topoBox = topoBox.coerceIn(padY, altura - padY - boxAltura)
+            if (topoBox < topoArea) topoBox = py + 8.dp.toPx()
+            topoBox = topoBox.coerceIn(topoArea, (baseArea - boxAltura).coerceAtLeast(topoArea))
 
             drawRoundRect(
                 color = corCartao,
-                topLeft = Offset(esquerda, topoBox),
+                topLeft = Offset(esquerdaBox, topoBox),
                 size = Size(boxLargura, boxAltura),
                 cornerRadius = CornerRadius(6.dp.toPx()),
             )
             drawRoundRect(
                 color = corBordaCartao,
-                topLeft = Offset(esquerda, topoBox),
+                topLeft = Offset(esquerdaBox, topoBox),
                 size = Size(boxLargura, boxAltura),
                 cornerRadius = CornerRadius(6.dp.toPx()),
                 style = Stroke(width = 1.dp.toPx()),
             )
             var linhaTopo = topoBox + 6.dp.toPx()
             layouts.forEach { layout ->
-                drawText(layout, topLeft = Offset(esquerda + 8.dp.toPx(), linhaTopo))
+                drawText(layout, topLeft = Offset(esquerdaBox + 8.dp.toPx(), linhaTopo))
                 linhaTopo += layout.size.height
             }
         }

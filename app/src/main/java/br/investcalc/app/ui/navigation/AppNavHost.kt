@@ -5,6 +5,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.CompareArrows
 import androidx.compose.material.icons.filled.AccountBalance
@@ -40,6 +42,8 @@ import br.investcalc.app.data.ads.DataStoreSimulacaoCounter
 import br.investcalc.app.data.ads.IntersticialCarregador
 import br.investcalc.app.data.ads.UmConsent
 import br.investcalc.app.data.analytics.FirebaseAnalyticsRepository
+import br.investcalc.app.data.plano.DataStorePlanoSemAdsPersistence
+import br.investcalc.app.data.plano.PlanoSemAdsRepositorio
 import br.investcalc.app.data.rates.BcbApiFactory
 import br.investcalc.app.data.rates.BcbRatesRepository
 import br.investcalc.app.data.rates.DataStoreTaxaCache
@@ -52,6 +56,7 @@ import br.investcalc.app.domain.ads.InterstitialGate
 import br.investcalc.app.domain.chart.EvolutionChartBuilder
 import br.investcalc.app.domain.chart.PatrimonioSeries
 import br.investcalc.app.domain.model.InvestmentResult
+import br.investcalc.app.domain.plano.EstadoPlanoSemAds
 import br.investcalc.app.ui.ads.BannerRodape
 import br.investcalc.app.ui.chart.EvolutionChartScreen
 import br.investcalc.app.ui.compare.ComparadorScreen
@@ -114,31 +119,56 @@ fun AppNavHost(modifier: Modifier = Modifier) {
     val consentimento = remember { UmConsent(contexto) }
     val simulacaoCounter = remember { DataStoreSimulacaoCounter(contexto) }
     val intersticial = remember { IntersticialCarregador(contexto) }
+    val planoSemAds = remember {
+        PlanoSemAdsRepositorio(
+            context = contexto,
+            persistencia = DataStorePlanoSemAdsPersistence(contexto),
+        )
+    }
 
     var appSettings by remember { mutableStateOf(AppSettings()) }
     val consentimentoAdsLiberado by consentimento.adsLiberados.collectAsState(
         initial = consentimento.adsLiberados.value,
     )
+    val estadoPlano by planoSemAds.estado.collectAsState()
+    val planoResolvido by planoSemAds.resolvido.collectAsState()
+    val precoPlano by planoSemAds.preco.collectAsState()
     var intersticialNoCalculoAnterior by remember { mutableStateOf(false) }
+    var umpInicializado by remember { mutableStateOf(false) }
 
-    // Cold start: taxas + RC de ads + consentimento UMP (formulário na 1ª abertura).
+    // Cold start: taxas + RC de ads + plano sem ads (conecta ao Billing).
     LaunchedEffect(Unit) {
         repositorioTaxas.atualizar()
         appSettings = remoteConfigAds.carregar()
-        (contexto as? Activity)?.let { consentimento.inicializar(it) }
+        planoSemAds.inicializar()
     }
     LaunchedEffect(rotaAtual) {
         if (rotaAtual != null) analyticsRepository.screenViewed(rotaAtual)
     }
 
-    // Pré-carrega o intersticial assim que houver consentimento + ads ativos.
-    LaunchedEffect(appSettings.adsEnabled, consentimentoAdsLiberado) {
-        if (appSettings.adsEnabled && consentimentoAdsLiberado) {
+    // UMP só é pedido a quem não comprou o plano ainda — comprador a frio nunca
+    // vê formulário de consentimento (T4). Aparelho sem Play (INDISPONIVEL)
+    // tenta mesmo assim, pois billing fora do ar não implica consentimento.
+    LaunchedEffect(estadoPlano, planoResolvido, umpInicializado) {
+        if (planoResolvido && !umpInicializado &&
+            estadoPlano != EstadoPlanoSemAds.COMPRADO
+        ) {
+            umpInicializado = true
+            (contexto as? Activity)?.let { consentimento.inicializar(it) }
+        }
+    }
+
+    val planoComprado = estadoPlano == EstadoPlanoSemAds.COMPRADO
+
+    // Pré-carrega o intersticial quando houver consentimento + ads ativos e o
+    // usuário ainda não comprou o plano sem ads (comprador não vê anúncio).
+    LaunchedEffect(appSettings.adsEnabled, consentimentoAdsLiberado, planoComprado) {
+        if (appSettings.adsEnabled && consentimentoAdsLiberado && !planoComprado) {
             intersticial.carregar()
         }
     }
 
-    val adsHabilitado = appSettings.adsEnabled && consentimentoAdsLiberado
+    val adsHabilitado = appSettings.adsEnabled && consentimentoAdsLiberado && !planoComprado
 
     val registrarSimulacao: (String, Int, Boolean) -> Unit = { tipo, meses, temAporte ->
         analyticsRepository.calculationPerformed(tipo, meses, temAporte)
@@ -170,26 +200,31 @@ fun AppNavHost(modifier: Modifier = Modifier) {
                     selected = rotaAtual == ROTA_CALCULADORA,
                     onClick = { navController.navigarPara(ROTA_CALCULADORA) },
                     icon = { Icon(Icons.Filled.Calculate, stringResource(R.string.nav_calculadora)) },
+                    label = { Text(stringResource(R.string.nav_calculadora)) },
                 )
                 NavigationBarItem(
                     selected = rotaAtual == ROTA_TESOURO,
                     onClick = { navController.navigarPara(ROTA_TESOURO) },
                     icon = { Icon(Icons.Filled.AccountBalance, stringResource(R.string.nav_tesouro)) },
+                    label = { Text(stringResource(R.string.nav_tesouro)) },
                 )
                 NavigationBarItem(
                     selected = rotaAtual == ROTA_COMPARAR,
                     onClick = { navController.navigarPara(ROTA_COMPARAR) },
                     icon = { Icon(Icons.AutoMirrored.Filled.CompareArrows, stringResource(R.string.nav_comparar)) },
+                    label = { Text(stringResource(R.string.nav_comparar)) },
                 )
                 NavigationBarItem(
                     selected = rotaAtual == ROTA_GUIA,
                     onClick = { navController.navigarPara(ROTA_GUIA) },
                     icon = { Icon(Icons.Filled.MenuBook, stringResource(R.string.nav_guia)) },
+                    label = { Text(stringResource(R.string.nav_guia)) },
                 )
                 NavigationBarItem(
                     selected = rotaAtual == ROTA_AJUSTES,
                     onClick = { navController.navigarPara(ROTA_AJUSTES) },
                     icon = { Icon(Icons.Filled.Settings, stringResource(R.string.nav_ajustes)) },
+                    label = { Text(stringResource(R.string.nav_ajustes)) },
                 )
             }
         },
@@ -232,8 +267,16 @@ fun AppNavHost(modifier: Modifier = Modifier) {
                         onAlternarConsentimento = {
                             (contexto as? Activity)?.let { consentimento.abrirFormulario(it) }
                         },
+                        estadoPlano = estadoPlano,
+                        precoPlano = precoPlano,
+                        onComprarPlano = {
+                            (contexto as? Activity)?.let { planoSemAds.comprar(it) }
+                        },
+                        onRestaurarCompras = {
+                            planoSemAds.restaurar()
+                        },
                         onForcarCrashTeste = {
-                            throw RuntimeException("Crash forçado (teste) — P4/Crashlytics")
+                            throw RuntimeException("Crash forçado (5 toques na versão) — P5/Crashlytics")
                         },
                     )
                 }
@@ -284,7 +327,11 @@ private fun AbaCalculadora(
                 onSimulacaoRealizada = onSimulacaoRealizada,
             )
         } else {
-            Column(modifier = Modifier.fillMaxSize()) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState()),
+            ) {
                 TextButton(onClick = { serie = null; resultado = null }) {
                     Text(stringResource(R.string.voltar))
                 }

@@ -8,66 +8,67 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 
 /**
- * Paleta escura de referência do print (console do Google): fundo ~#2B2B2B,
- * primária índigo ~#5C6BC0, superfícies um pouco mais claras que o fundo.
+ * Paleta WhatsApp (P7/T3) — única fonte de cores do app (nenhum hex fora daqui,
+ * exceto recursos XML do sistema/splash e os ativos do ícone, fora do escopo
+ * até a aprovação do tema).
+ *
+ * Light:  primary #008069, secondary #25D366, background #F6F6F6, surface #FFFFFF.
+ * Dark:   primary #00A884, secondary #25D366, background #0B141A, surface #1F2C34.
  */
-private val IndigoPrimaria = Color(0xFF5C6BC0)
-private val IndigoContainer = Color(0xFF3949AB)
-private val IndigoSecundaria = Color(0xFF7986CB)
-private val IndigoTernaria = Color(0xFF9FA8DA)
-private val CinzaErro = Color(0xFFEF5350)
+private val VerdePrimariaClaro = Color(0xFF008069)
+private val VerdeSecundaria = Color(0xFF25D366)
+private val CinzaErro = Color(0xFFBA1A1A)
 
 private val DarkColors = darkColorScheme(
-    primary = IndigoPrimaria,
+    primary = Color(0xFF00A884),
+    onPrimary = Color(0xFF00382C),
+    primaryContainer = Color(0xFF005441),
+    onPrimaryContainer = Color(0xFF9FF5DB),
+    secondary = VerdeSecundaria,
+    onSecondary = Color(0xFF002E14),
+    secondaryContainer = Color(0xFF004D24),
+    onSecondaryContainer = Color(0xFF9FF0B8),
+    tertiary = Color(0xFF00A884),
+    onTertiary = Color(0xFF00382C),
+    background = Color(0xFF0B141A),
+    onBackground = Color(0xFFE1E3DF),
+    surface = Color(0xFF1F2C34),
+    onSurface = Color(0xFFE1E3DF),
+    surfaceVariant = Color(0xFF38474E),
+    onSurfaceVariant = Color(0xFFBFC9CC),
+    outline = Color(0xFF899396),
+    outlineVariant = Color(0xFF39474D),
+    error = Color(0xFFFFB4AB),
+    onError = Color(0xFF690005),
+)
+
+private val LightColors = lightColorScheme(
+    primary = VerdePrimariaClaro,
     onPrimary = Color(0xFFFFFFFF),
-    primaryContainer = IndigoContainer,
-    onPrimaryContainer = Color(0xFFFFFFFF),
-    secondary = IndigoSecundaria,
-    onSecondary = Color(0xFFFFFFFF),
-    secondaryContainer = Color(0xFF28304F),
-    onSecondaryContainer = Color(0xFFD7DCFF),
-    tertiary = IndigoTernaria,
-    onTertiary = Color(0xFF202040),
-    background = Color(0xFF2B2B2B),
-    onBackground = Color(0xFFECEFF1),
-    surface = Color(0xFF333333),
-    onSurface = Color(0xFFECEFF1),
-    surfaceVariant = Color(0xFF3D3D3D),
-    onSurfaceVariant = Color(0xFFBDBDBD),
-    outline = Color(0xFF8E8E8E),
-    outlineVariant = Color(0xFF494949),
+    primaryContainer = Color(0xFFA8E6D5),
+    onPrimaryContainer = Color(0xFF00201A),
+    secondary = VerdeSecundaria,
+    onSecondary = Color(0xFF002E14),
+    secondaryContainer = Color(0xFFB7F6C7),
+    onSecondaryContainer = Color(0xFF002E0F),
+    tertiary = Color(0xFF006C5A),
+    onTertiary = Color(0xFFFFFFFF),
+    background = Color(0xFFF6F6F6),
+    onBackground = Color(0xFF1C1B1F),
+    surface = Color(0xFFFFFFFF),
+    onSurface = Color(0xFF1C1B1F),
+    surfaceVariant = Color(0xFFDCE5E1),
+    onSurfaceVariant = Color(0xFF404944),
+    outline = Color(0xFF6F7974),
+    outlineVariant = Color(0xFFBEC9C4),
     error = CinzaErro,
     onError = Color(0xFFFFFFFF),
 )
 
-private val LightColors = lightColorScheme(
-    primary = Color(0xFF3F51B5),
-    onPrimary = Color(0xFFFFFFFF),
-    primaryContainer = Color(0xFFC5CAE9),
-    onPrimaryContainer = Color(0xFF1A237E),
-    secondary = Color(0xFF5C6BC0),
-    onSecondary = Color(0xFFFFFFFF),
-    secondaryContainer = Color(0xFFC5CAE9),
-    onSecondaryContainer = Color(0xFF28304F),
-    tertiary = Color(0xFF7986CB),
-    onTertiary = Color(0xFFFFFFFF),
-    background = Color(0xFFF7F7F7),
-    onBackground = Color(0xFF1F1F1F),
-    surface = Color(0xFFFFFFFF),
-    onSurface = Color(0xFF1F1F1F),
-    surfaceVariant = Color(0xFFE3E4EB),
-    onSurfaceVariant = Color(0xFF616161),
-    outline = Color(0xFF9E9E9E),
-    outlineVariant = Color(0xFFCBCBCB),
-    error = Color(0xFFD32F2F),
-    onError = Color(0xFFFFFFFF),
-)
-
 /**
- * Tema Material 3 do InvestCalc: paleta índigo escura (referência do print)
- * e paleta clara correspondente, seguindo sempre o modo do sistema
- * ([isSystemInDarkTheme]). Nenhuma cor é hardcoded nos composables — tudo é
- * lido via MaterialTheme.colorScheme.
+ * Tema Material 3 do InvestCalc: paleta WhatsApp (P7/T3), seguindo sempre o
+ * modo do sistema ([isSystemInDarkTheme]). Nenhuma cor é hardcoded nos
+ * composables — tudo é lido via MaterialTheme.colorScheme.
  */
 @Composable
 fun InvestCalcTheme(

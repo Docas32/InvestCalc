@@ -32,10 +32,12 @@ import androidx.compose.ui.unit.dp
 import br.investcalc.app.R
 import br.investcalc.app.data.rates.RatesFallback
 import br.investcalc.app.data.rates.RatesSnapshot
+import br.investcalc.app.domain.calculator.PrazoConverter
 import br.investcalc.app.domain.calculator.RateConverter
 import br.investcalc.app.domain.calculator.TesouroIpcaPlusCalculator
 import br.investcalc.app.domain.calculator.TesouroPrefixadoCalculator
 import br.investcalc.app.domain.calculator.TesouroSelicCalculator
+import br.investcalc.app.domain.calculator.UnidadePrazo
 import br.investcalc.app.domain.chart.EvolutionChartBuilder
 import br.investcalc.app.domain.chart.PatrimonioSeries
 import br.investcalc.app.domain.chart.PatrimonioSeriesBuilder
@@ -43,6 +45,8 @@ import br.investcalc.app.domain.model.InvestmentResult
 import br.investcalc.app.domain.model.MonetaryValue
 import br.investcalc.app.ui.chart.EvolutionChartScreen
 import br.investcalc.app.ui.input.CampoMonetario
+import br.investcalc.app.ui.input.CampoPrazo
+import br.investcalc.app.ui.input.erroPrazo
 import br.investcalc.app.ui.input.formatarTaxaUi
 import br.investcalc.app.ui.input.parseDecimalBr
 import br.investcalc.app.core.format.CurrencyInputMask
@@ -74,9 +78,10 @@ fun TesouroScreen(
     onTooltipUsado: () -> Unit = {},
 ) {
     var modo by remember { mutableStateOf(TesouroModo.SELIC) }
-    var valorInicialTexto by remember { mutableStateOf("100000") }
-    var aporteMensalTexto by remember { mutableStateOf("20000") }
-    var mesesTexto by remember { mutableStateOf("12") }
+    var valorInicialTexto by remember { mutableStateOf("0") }
+    var aporteMensalTexto by remember { mutableStateOf("0") }
+    var prazoTexto by remember { mutableStateOf("12") }
+    var unidadePrazo by remember { mutableStateOf(UnidadePrazo.MESES) }
 
     val selicAutomatica = taxas.taxaSelicAnualPercentual.takeIf { it > 0.0 }
         ?: RatesFallback.TAXA_SELIC_ANUAL_PERCENTUAL
@@ -111,6 +116,8 @@ fun TesouroScreen(
         val erroSelic = stringResource(R.string.erro_taxa_selic)
         val erroReal = stringResource(R.string.erro_taxa_real)
         val erroPrefixada = stringResource(R.string.erro_taxa_prefixada)
+        val erroPrazoInformar = stringResource(R.string.erro_prazo_informar)
+        val erroPrazoUnidade = erroPrazo(unidadePrazo)
         Formulario(
             modo = modo,
             onModoMudou = { modo = it },
@@ -118,8 +125,10 @@ fun TesouroScreen(
             onValorInicialMudou = { valorInicialTexto = it },
             aporteMensalTexto = aporteMensalTexto,
             onAporteMensalMudou = { aporteMensalTexto = it },
-            mesesTexto = mesesTexto,
-            onMesesMudou = { mesesTexto = it },
+            prazoTexto = prazoTexto,
+            onPrazoMudou = { prazoTexto = it },
+            unidadePrazo = unidadePrazo,
+            onUnidadeMudou = { unidadePrazo = it },
             selicTexto = selicTexto,
             onSelicMudou = { selicTexto = it; selicEditada = true },
             ipcaTexto = ipcaTexto,
@@ -136,7 +145,8 @@ fun TesouroScreen(
                 modo = modo,
                 valorInicialTexto = valorInicialTexto,
                 aporteMensalTexto = aporteMensalTexto,
-                mesesTexto = mesesTexto,
+                prazoTexto = prazoTexto,
+                unidadePrazo = unidadePrazo,
                 selicTexto = selicTexto,
                 ipcaTexto = ipcaTexto,
                 selicAutomatica = selicAutomatica,
@@ -147,6 +157,8 @@ fun TesouroScreen(
                 erroSelic = erroSelic,
                 erroReal = erroReal,
                 erroPrefixada = erroPrefixada,
+                erroPrazoInformar = erroPrazoInformar,
+                erroPrazoUnidade = erroPrazoUnidade,
                 onSerie = { serie = it },
                 onResultado = { resultado = it },
                 onSimulacaoRealizada = onSimulacaoRealizada,
@@ -154,7 +166,11 @@ fun TesouroScreen(
         },
         )
     } else {
-        Column(modifier = Modifier.fillMaxSize()) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState()),
+        ) {
             TextButton(onClick = { serie = null; resultado = null; aviso = null }) {
                 Text(stringResource(R.string.voltar))
             }
@@ -175,8 +191,10 @@ private fun Formulario(
     onValorInicialMudou: (String) -> Unit,
     aporteMensalTexto: String,
     onAporteMensalMudou: (String) -> Unit,
-    mesesTexto: String,
-    onMesesMudou: (String) -> Unit,
+    prazoTexto: String,
+    onPrazoMudou: (String) -> Unit,
+    unidadePrazo: UnidadePrazo,
+    onUnidadeMudou: (UnidadePrazo) -> Unit,
     selicTexto: String,
     onSelicMudou: (String) -> Unit,
     ipcaTexto: String,
@@ -260,16 +278,12 @@ private fun Formulario(
         )
         Spacer(Modifier.height(8.dp))
 
-        OutlinedTextField(
-            value = mesesTexto,
-            onValueChange = onMesesMudou,
-            label = { Text(stringResource(R.string.campo_meses)) },
-            keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Number,
-                imeAction = ImeAction.Next,
-            ),
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth(),
+        CampoPrazo(
+            prazoTexto = prazoTexto,
+            onPrazoMudou = onPrazoMudou,
+            unidade = unidadePrazo,
+            onUnidadeMudou = onUnidadeMudou,
+            imeAction = ImeAction.Next,
         )
         Spacer(Modifier.height(8.dp))
 
@@ -374,7 +388,8 @@ private fun simular(
     modo: TesouroModo,
     valorInicialTexto: String,
     aporteMensalTexto: String,
-    mesesTexto: String,
+    prazoTexto: String,
+    unidadePrazo: UnidadePrazo,
     selicTexto: String,
     ipcaTexto: String,
     selicAutomatica: Double,
@@ -385,13 +400,18 @@ private fun simular(
     erroSelic: String,
     erroReal: String,
     erroPrefixada: String,
+    erroPrazoInformar: String,
+    erroPrazoUnidade: String,
     onSerie: (PatrimonioSeries) -> Unit,
     onResultado: (InvestmentResult) -> Unit,
     onSimulacaoRealizada: (String, Int, Boolean) -> Unit,
 ): String? {
     val valorInicial = CurrencyInputMask.toReais(valorInicialTexto)
     val aporteMensal = CurrencyInputMask.toReais(aporteMensalTexto)
-    val meses = mesesTexto.trim().toIntOrNull()?.coerceAtLeast(1) ?: 12
+    val prazoNumero = prazoTexto.trim().toIntOrNull()
+    if (prazoNumero == null) return erroPrazoInformar
+    if (!PrazoConverter.valido(prazoNumero, unidadePrazo)) return erroPrazoUnidade
+    val meses = PrazoConverter.paraMeses(prazoNumero, unidadePrazo)
 
     if (valorInicial <= 0.0 && aporteMensal <= 0.0) return erroValorAporte
 

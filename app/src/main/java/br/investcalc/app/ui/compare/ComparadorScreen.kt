@@ -30,9 +30,13 @@ import br.investcalc.app.core.format.CurrencyInputMask
 import br.investcalc.app.data.rates.RatesSnapshot
 import br.investcalc.app.domain.calculator.ComparadorCalculator
 import br.investcalc.app.domain.calculator.ComparadorResultado
+import br.investcalc.app.domain.calculator.PrazoConverter
+import br.investcalc.app.domain.calculator.UnidadePrazo
 import br.investcalc.app.domain.model.MonetaryValue
 import br.investcalc.app.ui.chart.formatarMoeda
 import br.investcalc.app.ui.input.CampoMonetario
+import br.investcalc.app.ui.input.CampoPrazo
+import br.investcalc.app.ui.input.erroPrazo
 import br.investcalc.app.ui.input.TAXA_DI_ANUAL_FALLBACK_PERCENTUAL
 import br.investcalc.app.ui.input.formatarTaxaUi
 import br.investcalc.app.ui.input.parseDecimalBr
@@ -53,9 +57,10 @@ fun ComparadorScreen(
     taxaOrigemLabel: String,
     onSimulacaoRealizada: (String, Int, Boolean) -> Unit = { _, _, _ -> },
 ) {
-    var valorInicialTexto by remember { mutableStateOf("100000") }
+    var valorInicialTexto by remember { mutableStateOf("0") }
     var aporteMensalTexto by remember { mutableStateOf("0") }
-    var mesesTexto by remember { mutableStateOf("12") }
+    var prazoTexto by remember { mutableStateOf("12") }
+    var unidadePrazo by remember { mutableStateOf(UnidadePrazo.MESES) }
     var percentualCdbTexto by remember { mutableStateOf("100") }
     var percentualLciTexto by remember { mutableStateOf("90") }
     var resultado by remember { mutableStateOf<ComparadorResultado?>(null) }
@@ -66,6 +71,8 @@ fun ComparadorScreen(
 
     val erroValorAporte = stringResource(R.string.erro_valor_aporte)
     val erroPercentual = stringResource(R.string.erro_percentual_cdi)
+    val erroPrazoInformar = stringResource(R.string.erro_prazo_informar)
+    val erroPrazoUnidade = erroPrazo(unidadePrazo)
 
     Column(
         modifier = Modifier
@@ -84,7 +91,6 @@ fun ComparadorScreen(
             valorInicial = valorInicialTexto,
             onValorMudou = { valorInicialTexto = it },
             imeAction = ImeAction.Next,
-            placeholder = stringResource(R.string.campo_placeholder_moeda),
         )
         Spacer(Modifier.height(8.dp))
 
@@ -93,20 +99,15 @@ fun ComparadorScreen(
             valorInicial = aporteMensalTexto,
             onValorMudou = { aporteMensalTexto = it },
             imeAction = ImeAction.Next,
-            placeholder = stringResource(R.string.campo_placeholder_moeda),
         )
         Spacer(Modifier.height(8.dp))
 
-        OutlinedTextField(
-            value = mesesTexto,
-            onValueChange = { mesesTexto = it },
-            label = { Text(stringResource(R.string.campo_meses)) },
-            keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Number,
-                imeAction = ImeAction.Next,
-            ),
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth(),
+        CampoPrazo(
+            prazoTexto = prazoTexto,
+            onPrazoMudou = { prazoTexto = it },
+            unidade = unidadePrazo,
+            onUnidadeMudou = { unidadePrazo = it },
+            imeAction = ImeAction.Next,
         )
         Spacer(Modifier.height(8.dp))
 
@@ -151,14 +152,17 @@ fun ComparadorScreen(
             onClick = {
                 val valorInicial = CurrencyInputMask.toReais(valorInicialTexto)
                 val aporteMensal = CurrencyInputMask.toReais(aporteMensalTexto)
-                val meses = mesesTexto.trim().toIntOrNull()?.coerceAtLeast(1) ?: 12
+                val prazoNumero = prazoTexto.trim().toIntOrNull()
                 val pctCdb = percentualCdbTexto.parseDecimalBr() ?: 0.0
                 val pctLci = percentualLciTexto.parseDecimalBr() ?: 0.0
                 aviso = when {
+                    prazoNumero == null -> erroPrazoInformar
+                    !PrazoConverter.valido(prazoNumero, unidadePrazo) -> erroPrazoUnidade
                     valorInicial <= 0.0 && aporteMensal <= 0.0 -> erroValorAporte
                     pctCdb <= 0.0 || pctCdb > 1000.0 -> erroPercentual
                     pctLci <= 0.0 || pctLci > 1000.0 -> erroPercentual
                     else -> {
+                        val meses = PrazoConverter.paraMeses(prazoNumero, unidadePrazo)
                         val calculado = ComparadorCalculator.comparar(
                             valorInicial = MonetaryValue.ofReais(valorInicial),
                             aporteMensal = MonetaryValue.ofReais(aporteMensal),

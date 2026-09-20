@@ -3,7 +3,7 @@
     <string name="app_name">InvestCalc</string>
 
     <string name="nav_calculadora">Calculator</string>
-    <string name="nav_tesouro">Treasury Direct</string>
+    <string name="nav_tesouro">Treasury</string>
     <string name="nav_comparar">Compare</string>
     <string name="nav_guia">Guide</string>
     <string name="nav_ajustes">Settings</string>
@@ -15,10 +15,16 @@
 
     <string name="campo_valor_inicial">Initial amount (R$)</string>
     <string name="campo_aporte_mensal">Monthly contribution (R$)</string>
-    <string name="campo_meses">Term (months)</string>
+    <string name="campo_prazo">Term</string>
     <string name="campo_percentual_cdi" formatted="false">CDI percentage (%)</string>
-    <string name="campo_placeholder_moeda">R$ 0,00</string>
     <string name="campo_taxa_di" formatted="false">DI rate (% p.a.)</string>
+    <string name="unidade_dias">Days</string>
+    <string name="unidade_meses">Months</string>
+    <string name="unidade_anos">Years</string>
+    <string name="erro_prazo_informar">Enter the investment term.</string>
+    <string name="erro_prazo_dias">Term in days must be between 1 and 18,250.</string>
+    <string name="erro_prazo_meses">Term in months must be between 1 and 9,999.</string>
+    <string name="erro_prazo_anos">Term in years must be between 1 and 50.</string>
     <string name="campo_taxa_juros_mensal" formatted="false">Interest rate (% per month)</string>
     <string name="erro_percentual_cdi">Enter a number greater than 0 and at most 1000.</string>
     <string name="erro_percentual_cdi_simular">The CDI percentage must be greater than 0 and at most 1000.</string>
@@ -55,12 +61,17 @@
 
     <string name="ajustes_title">Settings</string>
     <string name="ajustes_desc">Coming soon: language and theme preferences.</string>
+    <string name="ajustes_versao">Version %1$s</string>
     <string name="anuncios_consentimento">Ads (consent)</string>
     <string name="anuncios_ativo">Active</string>
     <string name="anuncios_inativo">Inactive, no ads</string>
-    <string name="ajustes_testes_title">Testing</string>
-    <string name="forcar_crash">Force crash (Crashlytics test)</string>
-    <string name="forcar_crash_desc">Triggers an exception to validate the Crashlytics report.</string>
+    <string name="plano_sem_ads_title">Remove ads</string>
+    <string name="plano_sem_ads_desc">One-time purchase: the app never loads ads.</string>
+    <string name="plano_sem_ads_preco">Price: %1$s</string>
+    <string name="plano_sem_ads_indisponivel">Unavailable (Google Play Billing)</string>
+    <string name="plano_sem_ads_comprado">Purchased — ads removed</string>
+    <string name="plano_sem_ads_comprar">Buy</string>
+    <string name="plano_sem_ads_restaurar">Restore purchases</string>
 
     <string name="origem_taxa_fallback">fallback</string>
     <string name="origem_taxa_bcb">BCB · %1$s</string>

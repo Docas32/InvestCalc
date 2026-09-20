@@ -181,6 +181,7 @@ dependencies {
 
     implementation(libs.play.services.ads)
     implementation(libs.ump)
+    implementation(libs.billing.ktx)
 
     debugImplementation(libs.androidx.compose.ui.tooling)
 

@@ -19,6 +19,7 @@ firebaseCrashlyticsGradle = "3.0.2"
 googleServices = "4.4.2"
 playServicesAds = "24.9.0"
 ump = "4.0.0"
+billing = "9.1.0"
 junit = "4.13.2"
 
 [libraries]
@@ -55,6 +56,7 @@ firebase-config = { group = "com.google.firebase", name = "firebase-config" }
 
 play-services-ads = { group = "com.google.android.gms", name = "play-services-ads", version.ref = "playServicesAds" }
 ump = { group = "com.google.android.ump", name = "user-messaging-platform", version.ref = "ump" }
+billing-ktx = { group = "com.android.billingclient", name = "billing-ktx", version.ref = "billing" }
 
 mockwebserver = { group = "com.squareup.okhttp3", name = "mockwebserver", version.ref = "okhttp" }
 

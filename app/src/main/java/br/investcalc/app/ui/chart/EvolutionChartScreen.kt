@@ -5,6 +5,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -36,6 +38,7 @@ private val formatoMes: DateTimeFormatter =
  * eixo + área de juros + tooltip) acima do card "Patrimônio mensal", seguido
  * da tabela mês a mês. Hermética (JVM pura + recursos i18n), nunca lança.
  */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun EvolutionChartScreen(
     series: EvolutionChartSeries?,
@@ -71,11 +74,12 @@ fun EvolutionChartScreen(
         )
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Legenda das duas séries do mesmo eixo.
-        Row(
+        // Legenda das duas séries do mesmo eixo — FlowRow (T2/P7): o texto
+        // longo de "Patrimônio (juros compostos)" nunca é cortado na borda.
+        FlowRow(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalArrangement = Arrangement.spacedBy(6.dp),
         ) {
             ItemLegenda(
                 cor = MaterialTheme.colorScheme.onSurfaceVariant,

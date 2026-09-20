@@ -20,6 +20,10 @@ import br.investcalc.app.core.format.CurrencyInputMask
  * Campo monetário com máscara "R$ 0,00" — **o único** componente de dinheiro
  * de todas as telas (CDI/CDB, Tesouro nos 3 modos e Comparar).
  *
+ * T5/P7: sem placeholder — o estado inicial exibe "R$ 0,00" e o primeiro
+ * dígito digitado substitui o zero à esquerda (digitando "5" → "R$ 0,05"),
+ * sem acumular zeros.
+ *
  * P3.2-FALHA1: o estado é um [TextFieldValue] e o `onValueChange` re-emite
  * SEMPRE com `selection = TextRange(text.length)` — tocar no meio e digitar
  * ou apagar continua funcionando, mas o cursor volta ao fim a cada mudança.
@@ -34,7 +38,6 @@ fun CampoMonetario(
     valorInicial: String,
     onValorMudou: (String) -> Unit,
     imeAction: ImeAction,
-    placeholder: String? = null,
 ) {
     var estado by remember {
         val seed = CurrencyInputMask.apply(CurrencyInputMask.digitsOf(valorInicial))
@@ -53,7 +56,6 @@ fun CampoMonetario(
             keyboardType = KeyboardType.Number,
             imeAction = imeAction,
         ),
-        placeholder = placeholder?.let { { Text(it) } },
         singleLine = true,
         modifier = Modifier.fillMaxWidth(),
     )

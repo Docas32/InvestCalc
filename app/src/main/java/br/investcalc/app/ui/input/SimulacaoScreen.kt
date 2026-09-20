@@ -27,6 +27,8 @@ import androidx.compose.ui.unit.dp
 import br.investcalc.app.R
 import br.investcalc.app.core.format.CurrencyInputMask
 import br.investcalc.app.domain.calculator.CdbCalculator
+import br.investcalc.app.domain.calculator.PrazoConverter
+import br.investcalc.app.domain.calculator.UnidadePrazo
 import br.investcalc.app.domain.chart.PatrimonioSeries
 import br.investcalc.app.domain.chart.PatrimonioSeriesBuilder
 import br.investcalc.app.domain.model.InvestmentResult
@@ -67,9 +69,10 @@ fun SimulacaoScreen(
     taxaDiOrigemLabel: String,
     onSimulacaoRealizada: (String, Int, Boolean) -> Unit = { _, _, _ -> },
 ) {
-    var valorInicialTexto by rememberSaveable { mutableStateOf("100000") }
-    var aporteMensalTexto by rememberSaveable { mutableStateOf("20000") }
-    var mesesTexto by rememberSaveable { mutableStateOf("12") }
+    var valorInicialTexto by rememberSaveable { mutableStateOf("0") }
+    var aporteMensalTexto by rememberSaveable { mutableStateOf("0") }
+    var prazoTexto by rememberSaveable { mutableStateOf("12") }
+    var unidadePrazo by rememberSaveable { mutableStateOf(UnidadePrazo.MESES) }
     var percentualCdiTexto by rememberSaveable { mutableStateOf("100") }
     var taxaDiTexto by rememberSaveable { mutableStateOf(taxaDiAnualAutomatica.formatarTaxaUi()) }
     var taxaDiEditadaManualmente by rememberSaveable { mutableStateOf(false) }
@@ -79,7 +82,6 @@ fun SimulacaoScreen(
 
     val rotuloValorInicial = stringResource(R.string.campo_valor_inicial)
     val rotuloAporteMensal = stringResource(R.string.campo_aporte_mensal)
-    val rotuloMeses = stringResource(R.string.campo_meses)
     val rotuloPercentualCdi = stringResource(R.string.campo_percentual_cdi)
     val rotuloTaxaDi = stringResource(R.string.campo_taxa_di)
     val rotuloTaxaMensalManual = stringResource(R.string.campo_taxa_juros_mensal)
@@ -87,6 +89,8 @@ fun SimulacaoScreen(
     val msgErroTaxaMensalManual = stringResource(R.string.erro_taxa_mensal_manual)
     val msgErroTaxaDi = stringResource(R.string.erro_taxa_di)
     val msgErroValorAporte = stringResource(R.string.erro_valor_aporte)
+    val msgErroPrazoInformar = stringResource(R.string.erro_prazo_informar)
+    val msgErroPrazoUnidade = erroPrazo(unidadePrazo)
     val rotuloOcultarAvancado = stringResource(R.string.ocultar_modo_avancado)
     val rotuloModoAvancado = stringResource(R.string.modo_avancado)
     val rotuloSimular = stringResource(R.string.simular)
@@ -99,7 +103,14 @@ fun SimulacaoScreen(
         }
     }
 
-    val meses = mesesTexto.trim().toIntOrNull()?.coerceAtLeast(1) ?: 12
+    val prazoNumero = prazoTexto.trim().toIntOrNull()
+    val meses = prazoNumero?.let { numero ->
+        if (PrazoConverter.valido(numero, unidadePrazo)) {
+            PrazoConverter.paraMeses(numero, unidadePrazo)
+        } else {
+            12
+        }
+    } ?: 12
 
     val percentualCdi = percentualCdiTexto.parseDecimalBr()
     val percentualValido = percentualCdi != null &&
@@ -145,7 +156,6 @@ fun SimulacaoScreen(
             valorInicial = valorInicialTexto,
             onValorMudou = { valorInicialTexto = it },
             imeAction = ImeAction.Next,
-            placeholder = stringResource(R.string.campo_placeholder_moeda),
         )
         Spacer(Modifier.height(8.dp))
 
@@ -154,20 +164,15 @@ fun SimulacaoScreen(
             valorInicial = aporteMensalTexto,
             onValorMudou = { aporteMensalTexto = it },
             imeAction = ImeAction.Next,
-            placeholder = stringResource(R.string.campo_placeholder_moeda),
         )
         Spacer(Modifier.height(8.dp))
 
-        OutlinedTextField(
-            value = mesesTexto,
-            onValueChange = { mesesTexto = it },
-            label = { Text(rotuloMeses) },
-            keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Number,
-                imeAction = ImeAction.Next,
-            ),
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth(),
+        CampoPrazo(
+            prazoTexto = prazoTexto,
+            onPrazoMudou = { prazoTexto = it },
+            unidade = unidadePrazo,
+            onUnidadeMudou = { unidadePrazo = it },
+            imeAction = ImeAction.Next,
         )
         Spacer(Modifier.height(8.dp))
 
@@ -243,7 +248,12 @@ fun SimulacaoScreen(
                 val valorInicial = CurrencyInputMask.toReais(valorInicialTexto)
                 val aporteMensal = CurrencyInputMask.toReais(aporteMensalTexto)
                 val usarManual = modoAvancado && taxaMensalManual > 0.0
+                val prazoNumero = prazoTexto.trim().toIntOrNull()
                 when {
+                    prazoNumero == null ->
+                        aviso = msgErroPrazoInformar
+                    !PrazoConverter.valido(prazoNumero, unidadePrazo) ->
+                        aviso = msgErroPrazoUnidade
                     !percentualValido ->
                         aviso = msgErroPctCdi
                     modoAvancado && taxaMensalManual <= 0.0 ->
@@ -254,6 +264,7 @@ fun SimulacaoScreen(
                         aviso = msgErroValorAporte
                     else -> {
                         aviso = null
+                        val meses = PrazoConverter.paraMeses(prazoNumero, unidadePrazo)
                         val serie = PatrimonioSeriesBuilder.construir(
                             valorInicial = valorInicial,
                             aporteMensal = aporteMensal,

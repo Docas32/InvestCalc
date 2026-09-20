@@ -3,7 +3,7 @@
     <string name="app_name">InvestCalc</string>
 
     <string name="nav_calculadora">Calculadora</string>
-    <string name="nav_tesouro">Tesouro Direto</string>
+    <string name="nav_tesouro">Tesouro</string>
     <string name="nav_comparar">Comparar</string>
     <string name="nav_guia">Guia</string>
     <string name="nav_ajustes">Ajustes</string>
@@ -15,10 +15,16 @@
 
     <string name="campo_valor_inicial">Valor inicial (R$)</string>
     <string name="campo_aporte_mensal">Aporte mensal (R$)</string>
-    <string name="campo_meses">Prazo (meses)</string>
+    <string name="campo_prazo">Prazo</string>
     <string name="campo_percentual_cdi" formatted="false">Percentual do CDI (%)</string>
-    <string name="campo_placeholder_moeda">R$ 0,00</string>
     <string name="campo_taxa_di" formatted="false">Taxa DI (% a.a.)</string>
+    <string name="unidade_dias">Dias</string>
+    <string name="unidade_meses">Meses</string>
+    <string name="unidade_anos">Anos</string>
+    <string name="erro_prazo_informar">Informe o prazo da aplicação.</string>
+    <string name="erro_prazo_dias">Prazo em dias deve ser entre 1 e 18.250.</string>
+    <string name="erro_prazo_meses">Prazo em meses deve ser entre 1 e 9.999.</string>
+    <string name="erro_prazo_anos">Prazo em anos deve ser entre 1 e 50.</string>
     <string name="campo_taxa_juros_mensal" formatted="false">Taxa de juros (% ao mês)</string>
     <string name="erro_percentual_cdi">Informe um número maior que 0 e no máximo 1000.</string>
     <string name="erro_percentual_cdi_simular">Percentual do CDI deve ser maior que 0 e no máximo 1000.</string>
@@ -55,12 +61,17 @@
 
     <string name="ajustes_title">Ajustes</string>
     <string name="ajustes_desc">Em breve: preferências de idioma e tema.</string>
+    <string name="ajustes_versao">Versão %1$s</string>
     <string name="anuncios_consentimento">Anúncios (consentimento)</string>
     <string name="anuncios_ativo">Ativo</string>
     <string name="anuncios_inativo">Inativo, sem ads</string>
-    <string name="ajustes_testes_title">Testes</string>
-    <string name="forcar_crash">Forçar crash (teste Crashlytics)</string>
-    <string name="forcar_crash_desc">Dispara uma exceção para validar o relatório do Crashlytics.</string>
+    <string name="plano_sem_ads_title">Remover anúncios</string>
+    <string name="plano_sem_ads_desc">Compra única: o app nunca carrega anúncios.</string>
+    <string name="plano_sem_ads_preco">Preço: %1$s</string>
+    <string name="plano_sem_ads_indisponivel">Indisponível (Google Play Billing)</string>
+    <string name="plano_sem_ads_comprado">Comprado — anúncios removidos</string>
+    <string name="plano_sem_ads_comprar">Comprar</string>
+    <string name="plano_sem_ads_restaurar">Restaurar compras</string>
 
     <string name="origem_taxa_fallback">fallback</string>
     <string name="origem_taxa_bcb">BCB · %1$s</string>
