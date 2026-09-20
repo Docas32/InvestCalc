@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="ic_launcher_background">#5C6BC0</color>
+    <!-- Cor sólida da base do ícone no splash (P7.3): extremo escuro do
+         gradiente WhatsApp, mantendo o círculo coerente com o launcher. -->
+    <color name="ic_launcher_background">#075E54</color>
 </resources>

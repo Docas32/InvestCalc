@@ -17,6 +17,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -31,7 +33,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -57,6 +61,7 @@ import br.investcalc.app.domain.chart.EvolutionChartBuilder
 import br.investcalc.app.domain.chart.PatrimonioSeries
 import br.investcalc.app.domain.model.InvestmentResult
 import br.investcalc.app.domain.plano.EstadoPlanoSemAds
+import br.investcalc.app.domain.plano.ResultadoRestauracao
 import br.investcalc.app.ui.ads.BannerRodape
 import br.investcalc.app.ui.chart.EvolutionChartScreen
 import br.investcalc.app.ui.compare.ComparadorScreen
@@ -133,8 +138,11 @@ fun AppNavHost(modifier: Modifier = Modifier) {
     val estadoPlano by planoSemAds.estado.collectAsState()
     val planoResolvido by planoSemAds.resolvido.collectAsState()
     val precoPlano by planoSemAds.preco.collectAsState()
+    val produtoDisponivel by planoSemAds.produtoDisponivel.collectAsState()
+    val feedbackRestauracao by planoSemAds.feedback.collectAsState()
     var intersticialNoCalculoAnterior by remember { mutableStateOf(false) }
     var umpInicializado by remember { mutableStateOf(false) }
+    val snackbarHostState = remember { SnackbarHostState() }
 
     // Cold start: taxas + RC de ads + plano sem ads (conecta ao Billing).
     LaunchedEffect(Unit) {
@@ -144,6 +152,22 @@ fun AppNavHost(modifier: Modifier = Modifier) {
     }
     LaunchedEffect(rotaAtual) {
         if (rotaAtual != null) analyticsRepository.screenViewed(rotaAtual)
+    }
+
+    // "Restaurar compras" (P7.3): sempre informa o resultado num snackbar.
+    LaunchedEffect(feedbackRestauracao) {
+        when (feedbackRestauracao) {
+            ResultadoRestauracao.COMPRA_ENCONTRADA ->
+                snackbarHostState.showSnackbar(
+                    contexto.getString(R.string.plano_sem_ads_restaurado),
+                )
+            ResultadoRestauracao.NENHUMA_COMPRA ->
+                snackbarHostState.showSnackbar(
+                    contexto.getString(R.string.plano_sem_ads_restaurar_sem_compra),
+                )
+            null -> Unit
+        }
+        planoSemAds.consumirFeedback()
     }
 
     // UMP só é pedido a quem não comprou o plano ainda — comprador a frio nunca
@@ -194,37 +218,38 @@ fun AppNavHost(modifier: Modifier = Modifier) {
 
     Scaffold(
         modifier = modifier,
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         bottomBar = {
             NavigationBar {
                 NavigationBarItem(
                     selected = rotaAtual == ROTA_CALCULADORA,
                     onClick = { navController.navigarPara(ROTA_CALCULADORA) },
                     icon = { Icon(Icons.Filled.Calculate, stringResource(R.string.nav_calculadora)) },
-                    label = { Text(stringResource(R.string.nav_calculadora)) },
+                    label = { RotuloNav(stringResource(R.string.nav_calculadora)) },
                 )
                 NavigationBarItem(
                     selected = rotaAtual == ROTA_TESOURO,
                     onClick = { navController.navigarPara(ROTA_TESOURO) },
                     icon = { Icon(Icons.Filled.AccountBalance, stringResource(R.string.nav_tesouro)) },
-                    label = { Text(stringResource(R.string.nav_tesouro)) },
+                    label = { RotuloNav(stringResource(R.string.nav_tesouro)) },
                 )
                 NavigationBarItem(
                     selected = rotaAtual == ROTA_COMPARAR,
                     onClick = { navController.navigarPara(ROTA_COMPARAR) },
                     icon = { Icon(Icons.AutoMirrored.Filled.CompareArrows, stringResource(R.string.nav_comparar)) },
-                    label = { Text(stringResource(R.string.nav_comparar)) },
+                    label = { RotuloNav(stringResource(R.string.nav_comparar)) },
                 )
                 NavigationBarItem(
                     selected = rotaAtual == ROTA_GUIA,
                     onClick = { navController.navigarPara(ROTA_GUIA) },
                     icon = { Icon(Icons.Filled.MenuBook, stringResource(R.string.nav_guia)) },
-                    label = { Text(stringResource(R.string.nav_guia)) },
+                    label = { RotuloNav(stringResource(R.string.nav_guia)) },
                 )
                 NavigationBarItem(
                     selected = rotaAtual == ROTA_AJUSTES,
                     onClick = { navController.navigarPara(ROTA_AJUSTES) },
                     icon = { Icon(Icons.Filled.Settings, stringResource(R.string.nav_ajustes)) },
-                    label = { Text(stringResource(R.string.nav_ajustes)) },
+                    label = { RotuloNav(stringResource(R.string.nav_ajustes)) },
                 )
             }
         },
@@ -269,8 +294,19 @@ fun AppNavHost(modifier: Modifier = Modifier) {
                         },
                         estadoPlano = estadoPlano,
                         precoPlano = precoPlano,
+                        produtoDisponivel = produtoDisponivel,
                         onComprarPlano = {
-                            (contexto as? Activity)?.let { planoSemAds.comprar(it) }
+                            // P7.3: sem Play/produto o fluxo não abre — explica
+                            // no snackbar em vez de "botão que não faz nada".
+                            val aberto = (contexto as? Activity)
+                                ?.let { planoSemAds.comprar(it) } ?: false
+                            if (!aberto) {
+                                scope.launch {
+                                    snackbarHostState.showSnackbar(
+                                        contexto.getString(R.string.plano_sem_ads_aviso_play_store),
+                                    )
+                                }
+                            }
                         },
                         onRestaurarCompras = {
                             planoSemAds.restaurar()
@@ -294,6 +330,22 @@ private fun androidx.navigation.NavHostController.navigarPara(rota: String) {
         launchSingleTop = true
         restoreState = true
     }
+}
+
+/**
+ * Label da bottom nav (P7.3): 11sp em TODAS as 5 abas, `maxLines=1` e
+ * centralização real ([TextAlign.Center] + largura total da coluna) — a
+ * "Calculadora" não transborda nem clipa na margem esquerda.
+ */
+@Composable
+private fun RotuloNav(texto: String) {
+    Text(
+        text = texto,
+        fontSize = 11.sp,
+        maxLines = 1,
+        textAlign = TextAlign.Center,
+        modifier = Modifier.fillMaxWidth(),
+    )
 }
 
 @Composable

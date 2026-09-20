@@ -68,10 +68,14 @@
     <string name="plano_sem_ads_title">Remove ads</string>
     <string name="plano_sem_ads_desc">One-time purchase: the app never loads ads.</string>
     <string name="plano_sem_ads_preco">Price: %1$s</string>
+    <string name="plano_sem_ads_disponivel_loja">One-time purchase — available in the store</string>
     <string name="plano_sem_ads_indisponivel">Unavailable (Google Play Billing)</string>
     <string name="plano_sem_ads_comprado">Purchased — ads removed</string>
     <string name="plano_sem_ads_comprar">Buy</string>
     <string name="plano_sem_ads_restaurar">Restore purchases</string>
+    <string name="plano_sem_ads_aviso_play_store">Available on the Play Store version</string>
+    <string name="plano_sem_ads_restaurado">Purchase restored — ads removed</string>
+    <string name="plano_sem_ads_restaurar_sem_compra">No purchases found</string>
 
     <string name="origem_taxa_fallback">fallback</string>
     <string name="origem_taxa_bcb">BCB · %1$s</string>

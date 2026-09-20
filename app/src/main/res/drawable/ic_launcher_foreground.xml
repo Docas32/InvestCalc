@@ -1,26 +1,34 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Glifo do launcher (P7.3, paleta WhatsApp): 3 barras arredondadas
+     ascendentes (alturas 24/40/54dp, bases alinhadas em y=77) + seta curva
+     sobre elas terminando em cabeça de seta no canto superior direito,
+     traço 6dp. Composição contida na safe zone 66/108 do adaptive icon;
+     o mesmo glifo é usado no <monochrome> (Android 13+). -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <!-- Glifo central (área segura 21..87): 3 barras crescentes + seta
-         ascendente, tudo branco. -->
+    <!-- Barra 1 (h=24): x 32..42, y 53..77 -->
     <path
         android:fillColor="#FFFFFFFF"
-        android:pathData="M34,60 h8 v18 h-8 z" />
+        android:pathData="M36,53 h2 q4,0 4,4 v16 q0,4 -4,4 h-2 q-4,0 -4,-4 v-16 q0,-4 4,-4 z" />
+    <!-- Barra 2 (h=40): x 50..60, y 37..77 -->
     <path
         android:fillColor="#FFFFFFFF"
-        android:pathData="M50,46 h8 v32 h-8 z" />
+        android:pathData="M54,37 h2 q4,0 4,4 v32 q0,4 -4,4 h-2 q-4,0 -4,-4 v-32 q0,-4 4,-4 z" />
+    <!-- Barra 3 (h=54): x 68..78, y 23..77 -->
     <path
         android:fillColor="#FFFFFFFF"
-        android:pathData="M66,32 h8 v46 h-8 z" />
+        android:pathData="M72,23 h2 q4,0 4,4 v44 q0,4 -4,4 h-2 q-4,0 -4,-4 v-44 q0,-4 4,-4 z" />
+    <!-- Seta curva sobre as barras (traço 6dp, ponta arredondada) -->
     <path
         android:strokeColor="#FFFFFFFF"
-        android:strokeWidth="5"
+        android:strokeWidth="6"
         android:strokeLineCap="round"
-        android:pathData="M73,33 L83,22" />
+        android:pathData="M32,70 C 48,54 62,40 78,28" />
+    <!-- Cabeça de seta (preenchida) apontando para o canto superior direito -->
     <path
         android:fillColor="#FFFFFFFF"
-        android:pathData="M83,22 L76,28 L80,29 z" />
+        android:pathData="M77,31 L69,32 L74,39 z" />
 </vector>

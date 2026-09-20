@@ -71,6 +71,15 @@ Checklist:
 - [ ] Países/valores: definir preço e países (inicial pode ser apenas Brasil).
 - [ ] Revisão da Google (pode levar alguns dias).
 
+### Teste real do plano sem ads (3 passos)
+
+1. **Track interno** no Play Console (`Internal testing`) com o AAB desta release
+   publicado uma vez.
+2. **Produto cadastrado** em *Monetização > Produtos*: id `remover_anuncios`,
+   tipo produto no app (não-consumível), com preço em R$ definido.
+3. **Testers de licença** (licença de teste) adicionados à track: sem pagamento
+   real; ao comprar/restaurar, o Billing devolve o preço e confirma a compra.
+
 ### Respostas sugeridas do formulário Data safety
 
 - O app coleta dados? **Sim** — Firebase Analytics (eventos anônimos de uso) e

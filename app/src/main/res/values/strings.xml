@@ -68,10 +68,14 @@
     <string name="plano_sem_ads_title">Remover anúncios</string>
     <string name="plano_sem_ads_desc">Compra única: o app nunca carrega anúncios.</string>
     <string name="plano_sem_ads_preco">Preço: %1$s</string>
+    <string name="plano_sem_ads_disponivel_loja">Compra única — disponível na loja</string>
     <string name="plano_sem_ads_indisponivel">Indisponível (Google Play Billing)</string>
     <string name="plano_sem_ads_comprado">Comprado — anúncios removidos</string>
     <string name="plano_sem_ads_comprar">Comprar</string>
     <string name="plano_sem_ads_restaurar">Restaurar compras</string>
+    <string name="plano_sem_ads_aviso_play_store">Disponível na versão da Play Store</string>
+    <string name="plano_sem_ads_restaurado">Compra restaurada — anúncios removidos</string>
+    <string name="plano_sem_ads_restaurar_sem_compra">Nenhuma compra encontrada</string>
 
     <string name="origem_taxa_fallback">fallback</string>
     <string name="origem_taxa_bcb">BCB · %1$s</string>

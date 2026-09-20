@@ -60,6 +60,53 @@ class PlanoSemAdsTest {
     }
 
     @Test
+    fun `indisponivel - tentativa de compra e recusada`() {
+        val tentativa = PlanoSemAds.tentarComprar(
+            billingDisponivel = false,
+            compradoPersistido = false,
+            produtoEncontrado = false,
+        )
+        assertEquals(DesfechoCompra.RECUSADA_INDISPONIVEL, tentativa)
+    }
+
+    @Test
+    fun `play conectado sem produto - tentativa de compra recusada`() {
+        val tentativa = PlanoSemAds.tentarComprar(
+            billingDisponivel = true,
+            compradoPersistido = false,
+            produtoEncontrado = false,
+        )
+        assertEquals(DesfechoCompra.RECUSADA_INDISPONIVEL, tentativa)
+    }
+
+    @Test
+    fun `play conectado com produto - tentativa de compra abre o fluxo`() {
+        val tentativa = PlanoSemAds.tentarComprar(
+            billingDisponivel = true,
+            compradoPersistido = false,
+            produtoEncontrado = true,
+        )
+        assertEquals(DesfechoCompra.ABERTA, tentativa)
+    }
+
+    @Test
+    fun `compra possivel exige o produto devolvido pelo play`() {
+        assertTrue(PlanoSemAds.compraPossivel(billingDisponivel = true, produtoEncontrado = true))
+        assertFalse(PlanoSemAds.compraPossivel(billingDisponivel = true, produtoEncontrado = false))
+        assertFalse(PlanoSemAds.compraPossivel(billingDisponivel = false, produtoEncontrado = true))
+    }
+
+    @Test
+    fun `restauracao encontrada vira feedback de compra encontrada`() {
+        assertEquals(ResultadoRestauracao.COMPRA_ENCONTRADA, PlanoSemAds.resultadoDaRestauracao(true))
+    }
+
+    @Test
+    fun `restauracao sem compra vira feedback de nenhuma compra`() {
+        assertEquals(ResultadoRestauracao.NENHUMA_COMPRA, PlanoSemAds.resultadoDaRestauracao(false))
+    }
+
+    @Test
     fun `produto do plano e o cadastrado no Play Console`() {
         assertEquals("remover_anuncios", PlanoSemAds.PRODUTO_ID)
     }

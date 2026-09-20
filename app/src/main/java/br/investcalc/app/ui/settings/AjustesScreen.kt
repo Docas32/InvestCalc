@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
@@ -30,7 +31,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import br.investcalc.app.BuildConfig
 import br.investcalc.app.R
+import br.investcalc.app.domain.plano.DesfechoCompra
 import br.investcalc.app.domain.plano.EstadoPlanoSemAds
+import br.investcalc.app.domain.plano.PlanoSemAds
 
 private const val JANELA_TOQUES_MS = 700L
 private const val TOQUES_PARA_CRASH = 5
@@ -43,8 +46,10 @@ private const val TOQUES_PARA_CRASH = 5
  *   decide é o próprio usuário no formulário (toggle é o gatilho). Some quando
  *   o plano sem ads foi comprado (mais o banner já é gated no nav host);
  * - "Remover anúncios" ([EstadoPlanoSemAds]): compra única não-consumível com
- *   preço do Play; card some em aparelho sem Play (INDISPONIVEL), vira status
- *   "comprado" quando [EstadoPlanoSemAds.COMPRADO];
+ *   preço do Play. Com Billing indisponível ou produto não devolvido, o card
+ *   aparece com "Comprar" visualmente desabilitado (cores do tema) e o
+ *   subtítulo "disponível na loja"; o toque explica via snackbar (P7.3).
+ *   "Restaurar compras" segue clicável e informa o resultado;
  * - "Versão %1$s": **5 toques rápidos** (janela de [JANELA_TOQUES_MS]) no
  *   número da versão disparam o teste de crash do Crashlytics, visível APENAS
  *   em build DEBUG ([BuildConfig.DEBUG]) — some no release sem perder o
@@ -56,6 +61,7 @@ fun AjustesScreen(
     onAlternarConsentimento: () -> Unit,
     estadoPlano: EstadoPlanoSemAds,
     precoPlano: String?,
+    produtoDisponivel: Boolean,
     onComprarPlano: () -> Unit,
     onRestaurarCompras: () -> Unit,
     onForcarCrashTeste: () -> Unit,
@@ -70,6 +76,15 @@ fun AjustesScreen(
     }
 
     val planoComprado = estadoPlano == EstadoPlanoSemAds.COMPRADO
+
+    // P7.3: "Comprar" só abre o fluxo com Billing conectado E produto
+    // devolvido. Indisponível => botão com cores de desabilitado (tema) que,
+    // ao toque, explica no snackbar (via onComprarPlano — o Play nunca abre).
+    val compraHabilitada = PlanoSemAds.tentarComprar(
+        billingDisponivel = estadoPlano != EstadoPlanoSemAds.INDISPONIVEL,
+        compradoPersistido = planoComprado,
+        produtoEncontrado = produtoDisponivel,
+    ) == DesfechoCompra.ABERTA
 
     val registrarToqueVersao: () -> Unit = {
         if (BuildConfig.DEBUG) {
@@ -116,7 +131,9 @@ fun AjustesScreen(
                     )
                 }
             }
-        } else if (estadoPlano == EstadoPlanoSemAds.NAO_COMPRADO) {
+        } else if (estadoPlano == EstadoPlanoSemAds.NAO_COMPRADO ||
+            estadoPlano == EstadoPlanoSemAds.INDISPONIVEL
+        ) {
             Card(modifier = Modifier.fillMaxWidth().padding(top = 8.dp)) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text(
@@ -127,16 +144,32 @@ fun AjustesScreen(
                         text = stringResource(R.string.plano_sem_ads_desc),
                         style = MaterialTheme.typography.bodyMedium,
                     )
-                    precoPlano?.let { preco ->
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = stringResource(R.string.plano_sem_ads_preco, preco),
-                            style = MaterialTheme.typography.bodyMedium,
-                        )
-                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                    // Preço SOMENTE quando o Play o retorna; sem conexão (ou
+                    // produto ausente) o subtítulo vira "disponível na loja".
+                    val precoOuLoja = precoPlano?.let {
+                        stringResource(R.string.plano_sem_ads_preco, it)
+                    } ?: stringResource(R.string.plano_sem_ads_disponivel_loja)
+                    Text(
+                        text = precoOuLoja,
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
                     Spacer(modifier = Modifier.height(12.dp))
                     Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        Button(onClick = onComprarPlano) {
+                        Button(
+                            onClick = onComprarPlano,
+                            colors = if (compraHabilitada) {
+                                ButtonDefaults.buttonColors()
+                            } else {
+                                // Visual de desabilitado do próprio Material 3
+                                // (paleta do tema), MAS continuando clicável:
+                                // o toque mostra a explicação no snackbar.
+                                ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                                    contentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+                                )
+                            },
+                        ) {
                             Text(stringResource(R.string.plano_sem_ads_comprar))
                         }
                         TextButton(onClick = onRestaurarCompras) {
