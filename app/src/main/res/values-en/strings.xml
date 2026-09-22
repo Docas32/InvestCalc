@@ -5,7 +5,6 @@
     <string name="nav_calculadora">Calculator</string>
     <string name="nav_tesouro">Treasury</string>
     <string name="nav_comparar">Compare</string>
-    <string name="nav_guia">Guide</string>
     <string name="nav_ajustes">Settings</string>
 
     <string name="calculadora_title">CDI/CDB Calculator</string>
@@ -61,6 +60,7 @@
 
     <string name="ajustes_title">Settings</string>
     <string name="ajustes_desc">Coming soon: language and theme preferences.</string>
+    <string name="ajustes_guia_item_desc" formatted="false">CDI, IR, LCI/LCA and compound interest explained</string>
     <string name="ajustes_versao">Version %1$s</string>
     <string name="anuncios_consentimento">Ads (consent)</string>
     <string name="anuncios_ativo">Active</string>

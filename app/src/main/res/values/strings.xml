@@ -5,7 +5,6 @@
     <string name="nav_calculadora">Calculadora</string>
     <string name="nav_tesouro">Tesouro</string>
     <string name="nav_comparar">Comparar</string>
-    <string name="nav_guia">Guia</string>
     <string name="nav_ajustes">Ajustes</string>
 
     <string name="calculadora_title">Calculadora CDI/CDB</string>
@@ -61,6 +60,7 @@
 
     <string name="ajustes_title">Ajustes</string>
     <string name="ajustes_desc">Em breve: preferências de idioma e tema.</string>
+    <string name="ajustes_guia_item_desc" formatted="false">CDI, IR, LCI/LCA e juros compostos explicados</string>
     <string name="ajustes_versao">Versão %1$s</string>
     <string name="anuncios_consentimento">Anúncios (consentimento)</string>
     <string name="anuncios_ativo">Ativo</string>

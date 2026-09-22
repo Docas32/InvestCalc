@@ -9,10 +9,14 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -27,6 +31,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import br.investcalc.app.BuildConfig
@@ -50,6 +55,8 @@ private const val TOQUES_PARA_CRASH = 5
  *   aparece com "Comprar" visualmente desabilitado (cores do tema) e o
  *   subtítulo "disponível na loja"; o toque explica via snackbar (P7.3).
  *   "Restaurar compras" segue clicável e informa o resultado;
+ * - "Guia educativo" (P8): reusa a tela existente do Guia, agora empilhada —
+ *   o toque chama [onAbrirGuia] e o back (seta ou gesto) retorna a Ajustes;
  * - "Versão %1$s": **5 toques rápidos** (janela de [JANELA_TOQUES_MS]) no
  *   número da versão disparam o teste de crash do Crashlytics, visível APENAS
  *   em build DEBUG ([BuildConfig.DEBUG]) — some no release sem perder o
@@ -64,6 +71,7 @@ fun AjustesScreen(
     produtoDisponivel: Boolean,
     onComprarPlano: () -> Unit,
     onRestaurarCompras: () -> Unit,
+    onAbrirGuia: () -> Unit,
     onForcarCrashTeste: () -> Unit,
 ) {
     var consentimentoLocal by remember { mutableStateOf(consentimentoAtivo) }
@@ -182,7 +190,15 @@ fun AjustesScreen(
 
         Spacer(modifier = Modifier.height(24.dp))
         HorizontalDivider()
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // P8: o Guia saiu da barra e virou item de Ajustes, acima de "Versão".
+        LinhaIconeTexto(
+            icone = Icons.Filled.MenuBook,
+            rotulo = stringResource(R.string.guia_title),
+            descricao = stringResource(R.string.ajustes_guia_item_desc),
+            onClick = onAbrirGuia,
+        )
 
         LinhaTexto(
             rotulo = stringResource(R.string.ajustes_versao, BuildConfig.VERSION_NAME),
@@ -211,6 +227,33 @@ private fun LinhaToggle(
             Text(text = descricao, style = MaterialTheme.typography.bodySmall)
         }
         Switch(checked = ligado, onCheckedChange = { onToggle() })
+    }
+}
+
+@Composable
+private fun LinhaIconeTexto(
+    icone: ImageVector,
+    rotulo: String,
+    descricao: String,
+    onClick: () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() }
+            .padding(vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(
+            imageVector = icone,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Spacer(modifier = Modifier.width(16.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(text = rotulo, style = MaterialTheme.typography.bodyLarge)
+            Text(text = descricao, style = MaterialTheme.typography.bodySmall)
+        }
     }
 }
 

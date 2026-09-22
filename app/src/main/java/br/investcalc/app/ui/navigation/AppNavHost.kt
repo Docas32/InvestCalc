@@ -11,7 +11,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.CompareArrows
 import androidx.compose.material.icons.filled.AccountBalance
 import androidx.compose.material.icons.filled.Calculate
-import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
@@ -87,17 +86,19 @@ private val rotasComBanner = setOf(ROTA_CALCULADORA, ROTA_TESOURO, ROTA_COMPARAR
 /**
  * Navegação principal do InvestCalc (Material 3).
  *
- * Bottom nav com 5 abas (Calculadora, Tesouro Direto, Comparar, Guia,
- * Ajustes), camada de taxas compartilhada ([BcbRatesRepository]) e a pasta de
+ * Bottom nav com 4 abas (Calculadora, Tesouro Direto, Comparar, Ajustes) e a
+ * tela do Guia agora EMPILHADA (aberta de dentro de Ajustes, não é mais aba),
+ * camada de taxas compartilhada ([BcbRatesRepository]) e a pasta de
  * monetização/fidelidade (T2/P4), tudo fio-a-fio aqui (sem Hilt):
  *
  *  - Analytics (Firebase): `calculation_performed`, `rates_origin`,
- *    `chart_tooltip_used` e `screen_view` nas 5 abas;
+ *    `chart_tooltip_used` e `screen_view` nas 4 abas + Guia (rota "guia");
  *  - Remote Config de ads (`ads_enabled`, `interstitial_frequency`) buscado
  *    no cold start;
  *  - UMP ([UmConsent]): formulário na primeira abertura e reaberto pelo toggle
  *    de Ajustes; sem consentimento não há banner nem intersticial;
- *  - banner adaptativo no rodapé das 3 abas de cálculo;
+ *  - banner adaptativo no rodapé das 3 abas de cálculo (P8: Guia está fora do
+ *    banner, como antes);
  *  - intersticial após `interstitial_frequency` cálculos (nunca o 1º, nunca em
  *    sequência), pré-carregado quando consentido e recarregado ao fechar.
  */
@@ -240,12 +241,6 @@ fun AppNavHost(modifier: Modifier = Modifier) {
                     label = { RotuloNav(stringResource(R.string.nav_comparar)) },
                 )
                 NavigationBarItem(
-                    selected = rotaAtual == ROTA_GUIA,
-                    onClick = { navController.navigarPara(ROTA_GUIA) },
-                    icon = { Icon(Icons.Filled.MenuBook, stringResource(R.string.nav_guia)) },
-                    label = { RotuloNav(stringResource(R.string.nav_guia)) },
-                )
-                NavigationBarItem(
                     selected = rotaAtual == ROTA_AJUSTES,
                     onClick = { navController.navigarPara(ROTA_AJUSTES) },
                     icon = { Icon(Icons.Filled.Settings, stringResource(R.string.nav_ajustes)) },
@@ -284,7 +279,9 @@ fun AppNavHost(modifier: Modifier = Modifier) {
                     )
                 }
                 composable(ROTA_GUIA) {
-                    GuiaScreen()
+                    GuiaScreen(
+                        onVoltar = { navController.popBackStack() },
+                    )
                 }
                 composable(ROTA_AJUSTES) {
                     AjustesScreen(
@@ -311,6 +308,12 @@ fun AppNavHost(modifier: Modifier = Modifier) {
                         onRestaurarCompras = {
                             planoSemAds.restaurar()
                         },
+                        onAbrirGuia = {
+                            // Guia é empilhada (P8): navegação comum, sem
+                            // popUpTo/saveState de aba — back (seta OU gesto)
+                            // retorna a Ajustes.
+                            navController.navigate(ROTA_GUIA) { launchSingleTop = true }
+                        },
                         onForcarCrashTeste = {
                             throw RuntimeException("Crash forçado (5 toques na versão) — P5/Crashlytics")
                         },
@@ -333,9 +336,10 @@ private fun androidx.navigation.NavHostController.navigarPara(rota: String) {
 }
 
 /**
- * Label da bottom nav (P7.3): 11sp em TODAS as 5 abas, `maxLines=1` e
+ * Label da bottom nav (P7.3): 11sp em TODAS as 4 abas, `maxLines=1` e
  * centralização real ([TextAlign.Center] + largura total da coluna) — a
- * "Calculadora" não transborda nem clipa na margem esquerda.
+ * "Calculadora" não transborda nem clipa na margem esquerda (P8: com 4 colunas
+ * a largura por aba cresceu e o texto cabe com folga).
  */
 @Composable
 private fun RotuloNav(texto: String) {

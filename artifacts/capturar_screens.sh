@@ -2,7 +2,8 @@
 #
 # Captura as screenshots da listagem da Play Store via adb (InvestCalc):
 # formulario CDI, resultado com grafico + tooltip, Comparador com vencedor e
-# Guia, em pt-BR e em EN. Saida: artifacts/screens/<01..04>_*.{pt,en}.png
+# Guia (via Ajustes -> "Guia educativo", desde P8 o Guia nao e aba da barra),
+# em pt-BR e em EN. Saida: artifacts/screens/<01..04>_*.{pt,en}.png
 #
 # Pre-requisitos:
 #   - app Installed no aparelho/aparelho adb conectado (debug ou release);
@@ -113,7 +114,7 @@ ativar_tela() {
 }
 
 conjunto() {
-  local locale="$1" lbl_nav_calc="$2" lbl_simular="$3" lbl_nav_compare="$4" lbl_nav_guia="$5" sufixo="$6"
+  local locale="$1" lbl_nav_calc="$2" lbl_simular="$3" lbl_nav_compare="$4" lbl_nav_ajustes="$5" lbl_guia_item="$6" sufixo="$7"
   echo "=== idioma $sufixo ($locale) ==="
   ativar_tela
   S cmd locale set-app-locales "$PKG" --locales "$locale" >/dev/null 2>&1
@@ -156,13 +157,19 @@ conjunto() {
   respira 3
   capturar "03_comparador_vencedor.${sufixo}.png"
 
-  tocar "$lbl_nav_guia" || { echo "Falhou ao abrir Guia."; return 1; }
+  # Guia (P8): nao e mais aba — abrimos Ajustes e tocamos no item "Guia
+  # educativo" (mesmo texto do titulo da tela), depois voltamos.
+  tocar "$lbl_nav_ajustes" || { echo "Falhou ao abrir Ajustes."; return 1; }
+  respira 2
+  rolar_ate "$lbl_guia_item" || return 1
   respira 2
   capturar "04_guia.${sufixo}.png"
+  S input keyevent KEYCODE_BACK
+  respira 1
 }
 
-fazer_pt() { conjunto "pt-BR" "Calculadora" "Simular" "Comparar" "Guia" "pt"; }
-fazer_en() { conjunto "en-US" "Calculator" "Simulate" "Compare" "Guide" "en"; }
+fazer_pt() { conjunto "pt-BR" "Calculadora" "Simular" "Comparar" "Ajustes" "Guia educativo" "pt"; }
+fazer_en() { conjunto "en-US" "Calculator" "Simulate" "Compare" "Settings" "Educational guide" "en"; }
 
 case "${1:-}" in
   pt) fazer_pt ;;
