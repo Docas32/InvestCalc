@@ -1,5 +1,6 @@
 package br.investcalc.app.ui.tesouro
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -171,6 +172,13 @@ fun TesouroScreen(
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState()),
         ) {
+            // Back do sistema na tela de resultado: volta ao formulário
+            // (mesmo efeito do botão "Voltar") em vez de sair do app.
+            BackHandler {
+                serie = null
+                resultado = null
+                aviso = null
+            }
             TextButton(onClick = { serie = null; resultado = null; aviso = null }) {
                 Text(stringResource(R.string.voltar))
             }

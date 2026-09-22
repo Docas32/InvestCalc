@@ -1,5 +1,6 @@
 package br.investcalc.app.ui.navigation
 
+import androidx.activity.compose.BackHandler
 import android.app.Activity
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -388,6 +389,13 @@ private fun AbaCalculadora(
                     .fillMaxSize()
                     .verticalScroll(rememberScrollState()),
             ) {
+                // Back do sistema na tela de resultado: volta ao formulário
+                // (mesmo efeito do botão "Voltar") em vez de sair do app —
+                // a Calculadora é o start destination e o gesto sumiria.
+                BackHandler {
+                    serie = null
+                    resultado = null
+                }
                 TextButton(onClick = { serie = null; resultado = null }) {
                     Text(stringResource(R.string.voltar))
                 }
