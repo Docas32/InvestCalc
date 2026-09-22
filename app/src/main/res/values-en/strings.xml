@@ -53,6 +53,7 @@
     <string name="chart_juros_acumulados_label">Accumulated interest</string>
     <string name="chart_bonus_juros_label">Interest-on-interest bonus</string>
     <string name="chart_mes_a_mes">Month by month (tap to open the table)</string>
+    <string name="chart_mes_a_mes_fechar">Month by month (tap to close the table)</string>
     <string name="chart_bonus_advertido">Advertised bonus: R$ %1$s came from interest on interest.</string>
     <string name="chart_tooltip_saldo">Balance: %1$s</string>
     <string name="chart_tooltip_rendimento">Month yield: %1$s</string>

@@ -53,6 +53,7 @@
     <string name="chart_juros_acumulados_label">Juros acumulados</string>
     <string name="chart_bonus_juros_label">Bônus juros sobre juros</string>
     <string name="chart_mes_a_mes">Mês a mês (toque para abrir a tabela)</string>
+    <string name="chart_mes_a_mes_fechar">Mês a mês (toque para fechar a tabela)</string>
     <string name="chart_bonus_advertido">Bônus advertido: R$ %1$s vieram dos juros sobre juros.</string>
     <string name="chart_tooltip_saldo">Saldo: %1$s</string>
     <string name="chart_tooltip_rendimento">Rendimento do mês: %1$s</string>

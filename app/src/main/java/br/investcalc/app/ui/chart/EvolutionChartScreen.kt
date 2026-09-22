@@ -1,5 +1,6 @@
 package br.investcalc.app.ui.chart
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -16,10 +17,18 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ExpandLess
+import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material3.Card
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -144,60 +153,87 @@ fun EvolutionChartScreen(
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        Text(
-            text = stringResource(R.string.chart_mes_a_mes),
-            style = MaterialTheme.typography.titleSmall,
-        )
-        Spacer(modifier = Modifier.height(6.dp))
-
-        LazyColumn(
+        // Tabela mês a mês expandível: começa RECOLHIDA; toque no cabeçalho
+        // expande/recolhe (cumpre o "toque para abrir a tabela" do label).
+        // O bug P2 (header estático + onTableOpened no-op) foi corrigido aqui.
+        var tabelaAberta by remember { mutableStateOf(false) }
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(320.dp),
+                .clickable {
+                    tabelaAberta = !tabelaAberta
+                    if (tabelaAberta) onTableOpened()
+                }
+                .padding(vertical = 4.dp),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            items(
-                items = s.pontos,
-                key = { it.mes },
-            ) { p ->
-                Row(
+            Text(
+                text = stringResource(
+                    if (tabelaAberta) R.string.chart_mes_a_mes_fechar else R.string.chart_mes_a_mes,
+                ),
+                style = MaterialTheme.typography.titleSmall,
+                modifier = Modifier.weight(1f),
+            )
+            Icon(
+                imageVector = if (tabelaAberta) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        Spacer(modifier = Modifier.height(6.dp))
+
+        AnimatedVisibility(visible = tabelaAberta) {
+            Column {
+                LazyColumn(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clickable { onTableOpened() }
-                        .padding(vertical = 3.dp),
+                        .height(320.dp),
                 ) {
-                    Text(
-                        text = formatoMes.format(p.mes),
-                        style = MaterialTheme.typography.bodySmall,
-                        modifier = Modifier.width(72.dp),
-                    )
-                    Text(
-                        text = formatarMoeda(p.saldoCompostoFimDoMes),
-                        style = MaterialTheme.typography.bodySmall,
-                        modifier = Modifier.width(118.dp),
-                    )
-                    Text(
-                        text = formatarMoeda(p.jurosAcumuladosFimDoMes),
-                        style = MaterialTheme.typography.bodySmall,
-                        modifier = Modifier.width(118.dp),
-                    )
-                    Text(
-                        text = formatarMoeda(p.diferencaJurosSobreJurosFimDoMes),
-                        style = MaterialTheme.typography.bodySmall,
-                        modifier = Modifier.width(118.dp),
-                    )
+                    items(
+                        items = s.pontos,
+                        key = { it.mes },
+                    ) { p ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { onTableOpened() }
+                                .padding(vertical = 3.dp),
+                        ) {
+                            Text(
+                                text = formatoMes.format(p.mes),
+                                style = MaterialTheme.typography.bodySmall,
+                                modifier = Modifier.width(72.dp),
+                            )
+                            Text(
+                                text = formatarMoeda(p.saldoCompostoFimDoMes),
+                                style = MaterialTheme.typography.bodySmall,
+                                modifier = Modifier.width(118.dp),
+                            )
+                            Text(
+                                text = formatarMoeda(p.jurosAcumuladosFimDoMes),
+                                style = MaterialTheme.typography.bodySmall,
+                                modifier = Modifier.width(118.dp),
+                            )
+                            Text(
+                                text = formatarMoeda(p.diferencaJurosSobreJurosFimDoMes),
+                                style = MaterialTheme.typography.bodySmall,
+                                modifier = Modifier.width(118.dp),
+                            )
+                        }
+                    }
                 }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Text(
+                    text = stringResource(
+                        R.string.chart_bonus_advertido,
+                        formatarMoeda(s.bonusJurosSobreJurosFinal),
+                    ),
+                    style = MaterialTheme.typography.bodySmall,
+                )
             }
         }
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        Text(
-            text = stringResource(
-                R.string.chart_bonus_advertido,
-                formatarMoeda(s.bonusJurosSobreJurosFinal),
-            ),
-            style = MaterialTheme.typography.bodySmall,
-        )
     }
 }
 
