@@ -64,12 +64,13 @@ class UmConsent(private val context: Context) {
         consentInformation.requestConsentInfoUpdate(
             activity,
             parametros,
-            ConsentInformation.OnConsentInfoUpdateSuccessListener { sincronizar() },
+            ConsentInformation.OnConsentInfoUpdateSuccessListener {
+                UserMessagingPlatform.loadAndShowConsentFormIfRequired(
+                    activity,
+                    ConsentForm.OnConsentFormDismissedListener { sincronizar() },
+                )
+            },
             ConsentInformation.OnConsentInfoUpdateFailureListener { sincronizar() },
-        )
-        UserMessagingPlatform.loadAndShowConsentFormIfRequired(
-            activity,
-            ConsentForm.OnConsentFormDismissedListener { sincronizar() },
         )
     }
 

@@ -1,0 +1,79 @@
+[
+  {
+    "arquivo": "en-US/capturas-telefone/01_formulario_cdi.png",
+    "largura": 1080,
+    "altura": 1920,
+    "bytes": 254179,
+    "tipo_png": 2
+  },
+  {
+    "arquivo": "en-US/capturas-telefone/02_resultado_grafico_tooltip.png",
+    "largura": 1080,
+    "altura": 1920,
+    "bytes": 343182,
+    "tipo_png": 2
+  },
+  {
+    "arquivo": "en-US/capturas-telefone/03_comparador_vencedor.png",
+    "largura": 1080,
+    "altura": 1920,
+    "bytes": 282913,
+    "tipo_png": 2
+  },
+  {
+    "arquivo": "en-US/capturas-telefone/04_guia.png",
+    "largura": 1080,
+    "altura": 1920,
+    "bytes": 139116,
+    "tipo_png": 2
+  },
+  {
+    "arquivo": "en-US/recurso-grafico-1024x500.png",
+    "largura": 1024,
+    "altura": 500,
+    "bytes": 274881,
+    "tipo_png": 2
+  },
+  {
+    "arquivo": "icone-512x512.png",
+    "largura": 512,
+    "altura": 512,
+    "bytes": 13679,
+    "tipo_png": 6
+  },
+  {
+    "arquivo": "pt-BR/capturas-telefone/01_formulario_cdi.png",
+    "largura": 1080,
+    "altura": 1920,
+    "bytes": 252266,
+    "tipo_png": 2
+  },
+  {
+    "arquivo": "pt-BR/capturas-telefone/02_resultado_grafico_tooltip.png",
+    "largura": 1080,
+    "altura": 1920,
+    "bytes": 347325,
+    "tipo_png": 2
+  },
+  {
+    "arquivo": "pt-BR/capturas-telefone/03_comparador_vencedor.png",
+    "largura": 1080,
+    "altura": 1920,
+    "bytes": 282615,
+    "tipo_png": 2
+  },
+  {
+    "arquivo": "pt-BR/capturas-telefone/04_guia.png",
+    "largura": 1080,
+    "altura": 1920,
+    "bytes": 141081,
+    "tipo_png": 2
+  },
+  {
+    "arquivo": "pt-BR/recurso-grafico-1024x500.png",
+    "largura": 1024,
+    "altura": 500,
+    "bytes": 273920,
+    "tipo_png": 2
+  }
+]

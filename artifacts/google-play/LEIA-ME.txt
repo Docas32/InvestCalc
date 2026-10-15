@@ -1,0 +1,18 @@
+InvestCalc — recursos para Google Play
+
+Ícone: icone-512x512.png (comum a todos os idiomas).
+Português: pt-BR/recurso-grafico-1024x500.png e as quatro imagens de pt-BR/capturas-telefone/.
+Inglês: en-US/recurso-grafico-1024x500.png e as quatro imagens de en-US/capturas-telefone/.
+
+Capturas em 1080 × 1920 (9:16), com interface real preservada inteira, sem distorção, centralizada sobre margens neutras. As quatro telas por idioma têm pelo menos 1080 pixels em cada lado. A elegibilidade à promoção também depende da revisão do Google.
+
+Vídeo é opcional. Deixe o campo vazio: este pacote não contém URL de vídeo publicado.
+
+Textos alternativos sugeridos:
+PT: InvestCalc: simulação e comparação de renda fixa, com curva ilustrativa de evolução patrimonial.
+EN: InvestCalc: fixed-income simulations and comparisons, with an illustrative growth curve.
+A curva do recurso gráfico é ilustrativa, não uma promessa de rentabilidade.
+
+Originais: /home/libai/InvestCalc/artifacts/icone_512.png e artifacts/screens/.
+Especificações: https://support.google.com/googleplay/android-developer/answer/9866151?hl=pt-BR
+Dimensões, formato PNG e limites de tamanho conferidos em validacao.json.

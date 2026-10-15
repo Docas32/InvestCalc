@@ -7,7 +7,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import br.investcalc.app.BuildConfig
@@ -16,7 +15,6 @@ import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.AdSize
 import com.google.android.gms.ads.AdView
 import com.google.android.gms.ads.LoadAdError
-import kotlin.math.roundToInt
 
 /**
  * Banner adaptativo ancorado no rodapé das abas de cálculo (T2/P4).
@@ -34,14 +32,11 @@ fun BannerRodape(
     if (!adsHabilitado) return
 
     val contexto = LocalContext.current
-    val densidade = LocalDensity.current
-    val larguraPx = with(densidade) {
-        LocalConfiguration.current.screenWidthDp.dp.roundToPx()
+    val larguraDp = LocalConfiguration.current.screenWidthDp
+    val tamanhoAdaptativo = remember(contexto, larguraDp) {
+        AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(contexto, larguraDp)
     }
-    val tamanhoAdaptativo = remember(contexto, larguraPx) {
-        AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(contexto, larguraPx)
-    }
-    val alturaDp = with(densidade) { tamanhoAdaptativo.height.toFloat().dp }
+    val alturaDp = tamanhoAdaptativo.height.dp
 
     AndroidView(
         modifier = modifier
